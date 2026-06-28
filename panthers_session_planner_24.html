@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panthers Session Planner</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --purple:#4B2D8C;--purple-dark:#321D5E;--purple-light:#7B52C2;
+  --gold:#F5C518;--gold-dark:#C49B0A;
+  --bg:#0F0A1A;--surface:#1A1230;--surface2:#231847;--surface3:#2C1F56;
+  --border:rgba(245,197,24,0.15);--border-strong:rgba(245,197,24,0.4);
+  --text:#F0EAF8;--text-muted:#C8C0DC;--text-dim:#9890B0;
+  --radius:12px;
+  --red-bg:rgba(180,40,40,0.2);--red-border:rgba(240,100,80,0.3);--red-text:#F4A090;
+  --blue-bg:rgba(30,80,160,0.2);--blue-border:rgba(80,140,240,0.3);--blue-text:#90B8F4;
+  --green-bg:rgba(15,110,86,0.2);--green-border:rgba(93,202,165,0.3);--green-text:#5DCAA5;
+  --orange-bg:rgba(196,100,20,0.2);--orange-border:rgba(240,160,60,0.3);--orange-text:#F0A040;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+header{background:linear-gradient(135deg,var(--purple-dark) 0%,#1A0F35 60%,var(--bg) 100%);border-bottom:2px solid var(--gold);padding:1.4rem 2rem 1.1rem;position:relative;overflow:hidden;}
+header::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(245,197,24,0.1) 0%,transparent 70%);pointer-events:none;}
+.h-top{display:flex;align-items:center;gap:1rem;margin-bottom:0.35rem;}
+.paw{font-size:1.9rem;line-height:1;}
+.brand-name{font-size:0.67rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:0.12rem;}
+.brand-title{font-size:1.35rem;font-weight:800;color:var(--text);letter-spacing:-0.02em;line-height:1.1;}
+.h-sub{font-size:0.8rem;color:var(--text-muted);}
+
+/* TABS */
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:0.7rem 1rem;font-size:0.78rem;font-weight:700;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;letter-spacing:0.03em;text-transform:uppercase;display:flex;align-items:center;gap:0.35rem;white-space:nowrap;flex-shrink:0;}
+.tab:hover{color:var(--text-muted);}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab-badge{background:var(--surface2);color:var(--text-dim);font-size:0.63rem;font-weight:800;padding:0.08rem 0.42rem;border-radius:10px;min-width:16px;text-align:center;}
+.tab.active .tab-badge{background:var(--gold);color:#1A0F35;}
+
+.panel{display:none;}.panel.active{display:block;}
+
+/* CONTROLS */
+.controls{padding:0.9rem 1.5rem;background:var(--surface);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:0.55rem;align-items:center;}
+.search-wrap{position:relative;flex:1;min-width:150px;max-width:240px;}
+.search-wrap input{width:100%;background:var(--surface2);border:1px solid var(--border-strong);border-radius:8px;color:var(--text);font-size:0.82rem;padding:0.4rem 0.65rem 0.4rem 1.75rem;outline:none;}
+.search-wrap input:focus{border-color:var(--gold);}
+.search-wrap input::placeholder{color:var(--text-dim);}
+.si{position:absolute;left:0.52rem;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:0.76rem;pointer-events:none;}
+.fgroup{display:flex;gap:0.28rem;flex-wrap:wrap;}
+.fbtn{background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text-muted);font-size:0.72rem;font-weight:600;padding:0.24rem 0.7rem;cursor:pointer;transition:all 0.15s;letter-spacing:0.02em;}
+.fbtn:hover{border-color:var(--gold);color:var(--gold);}
+.fbtn.active{background:var(--gold);border-color:var(--gold);color:#1A0F35;}
+.cbadge{margin-left:auto;font-size:0.73rem;color:var(--text-dim);white-space:nowrap;}
+.cbadge span{color:var(--gold);font-weight:700;}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:0.9rem;padding:1.2rem 1.5rem;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;transition:border-color 0.15s,transform 0.15s;cursor:pointer;}
+.card:hover{border-color:var(--border-strong);transform:translateY(-2px);}
+.card.open{border-color:var(--gold);box-shadow:0 0 0 1px rgba(245,197,24,0.15);}
+.card-top{padding:0.85rem 0.95rem 0.6rem;display:flex;align-items:flex-start;gap:0.65rem;}
+.card-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0;}
+.icon-am{background:rgba(75,45,140,0.5);}
+.icon-fwd{background:rgba(196,155,10,0.25);}
+.icon-w{background:rgba(15,110,86,0.4);}
+.icon-all{background:rgba(35,24,71,0.8);border:1px solid var(--border-strong);}
+.icon-back{background:rgba(180,40,40,0.35);}
+.icon-dm{background:rgba(30,80,160,0.4);}
+.icon-warmup{background:rgba(196,100,20,0.3);}
+.icon-phase{background:rgba(75,45,140,0.45);}
+.badge{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;flex-shrink:0;letter-spacing:-0.02em;line-height:1.1;text-align:center;white-space:pre-line;}
+.badge-att{background:rgba(75,45,140,0.5);color:#D0C0FF;}
+.badge-def{background:rgba(180,40,40,0.35);color:#F4A090;}
+.badge-trans{background:rgba(196,155,10,0.3);color:#F5C518;}
+.badge-warm{background:rgba(196,100,20,0.3);color:#F0A040;}
+.badge-phase{background:rgba(75,45,140,0.45);color:#D0C0FF;}
+.card-meta{flex:1;min-width:0;}
+.card-title{font-size:0.9rem;font-weight:700;color:var(--text);line-height:1.2;margin-bottom:0.28rem;}
+.tag-row{display:flex;flex-wrap:wrap;gap:0.25rem;}
+.tag{font-size:0.64rem;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;padding:0.12rem 0.42rem;border-radius:4px;background:rgba(75,45,140,0.5);border:1px solid rgba(180,160,255,0.3);color:#E8E0FF;}
+.tag.gold{background:rgba(245,197,24,0.12);border-color:rgba(245,197,24,0.3);color:var(--gold);}
+.tag.coral{background:var(--red-bg);border-color:var(--red-border);color:var(--red-text);}
+.tag.blue{background:var(--blue-bg);border-color:var(--blue-border);color:var(--blue-text);}
+.tag.green{background:var(--green-bg);border-color:var(--green-border);color:var(--green-text);}
+.tag.orange{background:var(--orange-bg);border-color:var(--orange-border);color:var(--orange-text);}
+.chevron{color:var(--text-dim);font-size:0.85rem;transition:transform 0.2s;flex-shrink:0;margin-top:2px;}
+.card.open .chevron{transform:rotate(180deg);color:var(--gold);}
+.card-preview{padding:0 0.95rem 0.8rem;font-size:0.79rem;color:var(--text-muted);line-height:1.5;}
+.card-body{display:none;border-top:1px solid var(--border);}
+.card.open .card-body{display:block;}
+
+/* SKILL BODY */
+.phase-lbl{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold);padding:0.8rem 0.95rem 0.45rem;}
+.cue-list{list-style:none;display:flex;flex-direction:column;gap:0.35rem;padding:0 0.95rem;}
+.cue-list li{display:flex;gap:0.42rem;font-size:0.79rem;color:var(--text);line-height:1.4;}
+.cue-list li::before{content:'→';color:var(--gold);font-weight:700;flex-shrink:0;}
+.drill-box{background:var(--surface2);border-radius:8px;border-left:3px solid var(--gold);padding:0.6rem 0.75rem;margin:0.7rem 0.95rem 0;}
+.drill-lbl{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--gold);margin-bottom:0.25rem;}
+.drill-txt{font-size:0.77rem;color:var(--text-muted);line-height:1.45;}
+.add-btn{font-size:0.69rem;font-weight:600;letter-spacing:0.04em;padding:0.23rem 0.58rem;background:rgba(245,197,24,0.1);border:1px solid rgba(245,197,24,0.3);border-radius:6px;color:var(--gold);cursor:pointer;text-transform:uppercase;transition:all 0.15s;margin:0.7rem 0.95rem 0.9rem;display:inline-block;}
+.add-btn:hover{background:rgba(245,197,24,0.2);border-color:var(--gold);}
+.add-btn.added{background:rgba(93,202,165,0.15);border-color:rgba(93,202,165,0.4);color:#5DCAA5;}
+
+/* GAME/PHASE/WARMUP SECTIONS */
+.gsec{padding:0.75rem 0.95rem;border-bottom:1px solid var(--border);}
+.gsec:last-child{border-bottom:none;}
+.slbl{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold);margin-bottom:0.45rem;}
+.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.3rem 0.85rem;}
+.setup-item{font-size:0.77rem;color:var(--text-muted);line-height:1.4;}
+.setup-item strong{color:var(--text-dim);font-weight:600;display:block;font-size:0.68rem;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:0.06rem;}
+.obj-box{background:rgba(245,197,24,0.07);border-left:3px solid var(--gold);border-radius:0 6px 6px 0;padding:0.52rem 0.72rem;font-size:0.79rem;color:var(--text);line-height:1.5;font-weight:500;}
+.rule-list{list-style:none;display:flex;flex-direction:column;gap:0.32rem;}
+.rule-list li{display:flex;gap:0.42rem;font-size:0.77rem;color:var(--text-muted);line-height:1.4;}
+.rule-list li::before{content:'▸';color:var(--text-dim);flex-shrink:0;}
+.score-box{background:var(--surface2);border-radius:8px;padding:0.52rem 0.72rem;font-size:0.77rem;color:var(--text-muted);line-height:1.5;}
+.skill-links{display:flex;flex-direction:column;gap:0.38rem;}
+.skill-link{display:flex;align-items:flex-start;gap:0.52rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.48rem 0.68rem;font-size:0.77rem;line-height:1.4;}
+.sl-icon{font-size:0.9rem;flex-shrink:0;margin-top:0.04rem;}
+.sl-name{font-weight:600;color:var(--text);margin-bottom:0.06rem;font-size:0.77rem;}
+.sl-cue{color:var(--text-muted);font-size:0.72rem;}
+
+/* SESSION TAB */
+.session-wrap{padding:1.25rem 1.5rem;}
+.session-meta{display:flex;flex-wrap:wrap;gap:0.65rem;margin-bottom:1.25rem;align-items:flex-end;}
+.meta-field{display:flex;flex-direction:column;gap:0.25rem;}
+.meta-lbl{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);}
+.meta-inp{background:var(--surface2);border:1px solid var(--border-strong);border-radius:8px;color:var(--text);font-size:0.83rem;padding:0.42rem 0.7rem;outline:none;}
+.meta-inp:focus{border-color:var(--gold);}
+.meta-inp::placeholder{color:var(--text-dim);}
+.total-time{background:var(--surface);border:1px solid var(--border-strong);border-radius:8px;padding:0.42rem 0.85rem;font-size:0.83rem;color:var(--gold);font-weight:700;white-space:nowrap;align-self:flex-end;}
+
+.sess-empty{text-align:center;padding:2.5rem 2rem;color:var(--text-dim);}
+.sess-empty .big{font-size:1.8rem;margin-bottom:0.65rem;}
+.sess-empty p{font-size:0.83rem;line-height:1.6;}
+.sess-empty em{color:var(--text-muted);font-style:normal;}
+
+.sess-items{display:flex;flex-direction:column;gap:0.55rem;margin-bottom:1.25rem;}
+
+/* SESSION BLOCKS */
+.sb{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color 0.15s;}
+.sb.drag-over{border-color:var(--gold);background:rgba(245,197,24,0.05);}
+.sb.dragging{opacity:0.4;}
+.sb-hd{display:flex;align-items:center;gap:0.65rem;padding:0.68rem 0.9rem;}
+.sb-drag{color:var(--text-dim);font-size:0.95rem;cursor:grab;user-select:none;flex-shrink:0;padding:0.2rem;}
+.sb-drag:active{cursor:grabbing;}
+.sb-num{width:22px;height:22px;border-radius:50%;background:var(--surface2);border:1px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:0.67rem;font-weight:700;color:var(--text-dim);flex-shrink:0;}
+.sb-ico{font-size:1rem;flex-shrink:0;}
+.sb-info{flex:1;min-width:0;}
+.sb-title{font-size:0.86rem;font-weight:700;color:var(--text);margin-bottom:0.12rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-sub{font-size:0.72rem;color:var(--text-muted);}
+.sb-type{font-size:0.63rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:0.1rem 0.42rem;border-radius:4px;flex-shrink:0;}
+.sb-type.skill{background:rgba(75,45,140,0.4);color:#D0C0FF;}
+.sb-type.game{background:rgba(245,197,24,0.12);color:var(--gold);}
+.sb-type.warmup{background:var(--orange-bg);color:var(--orange-text);}
+.sb-type.phase{background:rgba(93,202,165,0.15);color:#5DCAA5;}
+.sb-time{display:flex;align-items:center;gap:0.3rem;flex-shrink:0;}
+.sb-time input{width:44px;background:var(--surface2);border:1px solid var(--border-strong);border-radius:6px;color:var(--gold);font-size:0.8rem;font-weight:700;padding:0.22rem 0.3rem;text-align:center;outline:none;}
+.sb-time input:focus{border-color:var(--gold);}
+.sb-time-lbl{font-size:0.68rem;color:var(--text-dim);}
+.sb-toggle{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.72rem;padding:0.15rem 0.38rem;transition:color 0.1s;}
+.sb-toggle:hover{color:var(--gold);}
+.sb-rm{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.95rem;padding:0.18rem;transition:color 0.1s;flex-shrink:0;}
+.sb-rm:hover{color:#E24B4A;}
+.sb-cues{display:none;padding:0 0.9rem 0.7rem 3.2rem;}
+.sb.sb-open .sb-cues{display:block;}
+.sb-cue-list{list-style:none;display:flex;flex-direction:column;gap:0.28rem;margin-top:0.35rem;}
+.sb-cue-list li{font-size:0.75rem;color:var(--text-muted);display:flex;gap:0.38rem;line-height:1.4;}
+.sb-cue-list li::before{content:'→';color:var(--gold);flex-shrink:0;}
+.sb-drill{background:var(--surface2);border-left:3px solid var(--gold);border-radius:0 6px 6px 0;padding:0.48rem 0.62rem;margin-top:0.45rem;font-size:0.74rem;color:var(--text-muted);line-height:1.45;}
+.sb-drill-lbl{font-size:0.63rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--gold);margin-bottom:0.18rem;}
+
+.sess-actions{display:flex;gap:0.55rem;flex-wrap:wrap;}
+.act-btn{font-size:0.76rem;font-weight:600;padding:0.42rem 0.9rem;border-radius:8px;cursor:pointer;transition:all 0.15s;letter-spacing:0.02em;}
+.act-btn.primary{background:var(--gold);border:1px solid var(--gold);color:#1A0F35;}
+.act-btn.primary:hover{background:var(--gold-dark);}
+.act-btn.secondary{background:var(--surface2);border:1px solid var(--border-strong);color:var(--text-muted);}
+.act-btn.secondary:hover{border-color:var(--text-muted);color:var(--text);}
+.act-btn.danger{background:none;border:1px solid var(--red-border);color:var(--red-text);}
+.act-btn.danger:hover{background:var(--red-bg);}
+
+.print-area{display:none;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius);padding:1.1rem;margin-top:0.9rem;}
+.print-area.show{display:block;}
+.print-content{font-family:monospace;font-size:0.76rem;color:var(--text-muted);white-space:pre-wrap;line-height:1.6;}
+.copy-row{display:flex;justify-content:flex-end;margin-bottom:0.45rem;}
+.copy-btn{font-size:0.7rem;font-weight:600;padding:0.28rem 0.65rem;background:var(--surface2);border:1px solid var(--border-strong);border-radius:6px;color:var(--text-muted);cursor:pointer;transition:all 0.15s;}
+.copy-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+.empty-card{grid-column:1/-1;padding:2rem;text-align:center;color:var(--text-dim);font-size:0.83rem;}
+footer{text-align:center;padding:1.1rem;font-size:0.72rem;color:var(--text-dim);border-top:1px solid var(--border);}
+
+/* COACH VIEW */
+.cv-wrap{min-height:calc(100vh - 140px);display:flex;flex-direction:column;}
+.cv-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3rem 2rem;color:var(--text-dim);}
+.cv-empty .big{font-size:2.5rem;margin-bottom:1rem;}
+.cv-empty p{font-size:0.9rem;line-height:1.7;color:var(--text-muted);}
+.cv-empty em{color:var(--gold);font-style:normal;font-weight:600;}
+
+.cv-nav{display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1.5rem;background:var(--surface);border-bottom:1px solid var(--border);gap:1rem;flex-shrink:0;}
+.cv-nav-btn{background:var(--surface2);border:1px solid var(--border-strong);border-radius:10px;color:var(--text-muted);font-size:1.1rem;padding:0.5rem 1rem;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:0.4rem;font-weight:700;}
+.cv-nav-btn:hover:not(:disabled){border-color:var(--gold);color:var(--gold);}
+.cv-nav-btn:disabled{opacity:0.25;cursor:default;}
+.cv-counter{text-align:center;flex:1;}
+.cv-counter-num{font-size:1rem;font-weight:800;color:var(--gold);}
+.cv-counter-sub{font-size:0.7rem;color:var(--text-dim);margin-top:0.1rem;}
+.cv-progress{height:3px;background:var(--surface2);flex-shrink:0;}
+.cv-progress-bar{height:100%;background:var(--gold);transition:width 0.3s;}
+
+.cv-card{flex:1;padding:1.5rem;overflow-y:auto;}
+.cv-type-badge{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;padding:0.2rem 0.7rem;border-radius:20px;margin-bottom:1rem;}
+.cv-type-badge.warmup{background:var(--orange-bg);color:var(--orange-text);border:1px solid var(--orange-border);}
+.cv-type-badge.skill{background:rgba(75,45,140,0.4);color:#D0C0FF;border:1px solid rgba(180,160,255,0.3);}
+.cv-type-badge.game{background:rgba(245,197,24,0.12);color:var(--gold);border:1px solid rgba(245,197,24,0.3);}
+.cv-type-badge.phase{background:var(--green-bg);color:var(--green-text);border:1px solid var(--green-border);}
+
+.cv-title{font-size:1.6rem;font-weight:800;color:var(--text);line-height:1.15;margin-bottom:0.5rem;letter-spacing:-0.02em;}
+.cv-meta{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.25rem;}
+.cv-meta-pill{font-size:0.75rem;font-weight:600;padding:0.22rem 0.65rem;border-radius:20px;background:var(--surface2);border:1px solid var(--border-strong);color:var(--text-muted);}
+.cv-meta-pill.time{background:rgba(245,197,24,0.1);border-color:rgba(245,197,24,0.3);color:var(--gold);}
+
+.cv-section{margin-bottom:1.5rem;}
+.cv-section-label{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--gold);margin-bottom:0.6rem;display:flex;align-items:center;gap:0.5rem;}
+.cv-section-label::after{content:'';flex:1;height:1px;background:rgba(245,197,24,0.15);}
+
+.cv-objective{background:rgba(245,197,24,0.07);border-left:4px solid var(--gold);border-radius:0 8px 8px 0;padding:0.9rem 1rem;font-size:1rem;color:var(--text);line-height:1.6;font-weight:500;}
+
+.cv-cue-list{list-style:none;display:flex;flex-direction:column;gap:0.65rem;}
+.cv-cue-list li{display:flex;gap:0.65rem;font-size:1rem;color:var(--text);line-height:1.5;padding:0.7rem 0.85rem;background:var(--surface2);border-radius:8px;border-left:3px solid var(--gold);}
+.cv-cue-list li::before{content:'→';color:var(--gold);font-weight:800;flex-shrink:0;font-size:1rem;}
+
+.cv-rules-list{list-style:none;display:flex;flex-direction:column;gap:0.5rem;}
+.cv-rules-list li{display:flex;gap:0.6rem;font-size:0.95rem;color:var(--text-muted);line-height:1.5;padding:0.55rem 0.8rem;background:var(--surface2);border-radius:8px;}
+.cv-rules-list li::before{content:'▸';color:var(--text-dim);flex-shrink:0;}
+
+.cv-drill-box{background:var(--surface2);border-radius:10px;border-left:4px solid var(--purple-light);padding:1rem 1.1rem;}
+.cv-drill-label{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--purple-light);margin-bottom:0.4rem;}
+.cv-drill-text{font-size:0.95rem;color:var(--text-muted);line-height:1.6;}
+
+.cv-setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.65rem;}
+.cv-setup-item{background:var(--surface2);border-radius:8px;padding:0.65rem 0.85rem;}
+.cv-setup-item strong{display:block;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-dim);margin-bottom:0.2rem;}
+.cv-setup-item span{font-size:0.9rem;color:var(--text-muted);}
+
+.cv-score-box{background:var(--surface2);border-radius:10px;padding:0.85rem 1rem;font-size:0.95rem;color:var(--text-muted);line-height:1.6;border-left:4px solid var(--purple-light);}
+
+.cv-skill-link{display:flex;gap:0.7rem;background:var(--surface2);border-radius:8px;padding:0.75rem 0.9rem;margin-bottom:0.5rem;align-items:flex-start;}
+.cv-skill-icon{font-size:1.2rem;flex-shrink:0;margin-top:0.05rem;}
+.cv-skill-name{font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:0.2rem;}
+.cv-skill-cue{font-size:0.84rem;color:var(--text-muted);line-height:1.5;}
+
+/* DEEP DIVE */
+.cv-deepdive-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;background:var(--surface2);border:1px solid var(--border-strong);border-radius:10px;padding:0.85rem 1.1rem;cursor:pointer;margin-top:0.5rem;transition:border-color 0.15s;}
+.cv-deepdive-toggle:hover{border-color:var(--gold);}
+.cv-deepdive-toggle-left{display:flex;align-items:center;gap:0.6rem;}
+.cv-deepdive-label{font-size:0.85rem;font-weight:700;color:var(--text-muted);}
+.cv-deepdive-sub{font-size:0.72rem;color:var(--text-dim);margin-top:0.1rem;}
+.cv-deepdive-chevron{font-size:0.9rem;color:var(--text-dim);transition:transform 0.2s;}
+.cv-deepdive-toggle.open .cv-deepdive-chevron{transform:rotate(180deg);color:var(--gold);}
+.cv-deepdive-toggle.open{border-color:var(--gold);}
+.cv-deepdive-body{display:none;margin-top:0.65rem;padding:1.1rem;background:var(--surface2);border:1px solid var(--border-strong);border-radius:10px;animation:fadeSlide 0.18s ease;}
+.cv-deepdive-body.open{display:block;}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+.cv-dd-section{margin-bottom:1.1rem;}
+.cv-dd-section:last-child{margin-bottom:0;}
+.cv-dd-label{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold);margin-bottom:0.45rem;}
+.cv-dd-text{font-size:0.88rem;color:var(--text-muted);line-height:1.6;}
+.cv-dd-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;}
+.cv-dd-box{background:var(--surface3);border-radius:8px;padding:0.6rem 0.8rem;}
+.cv-dd-box strong{display:block;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:0.15rem;}
+.cv-dd-box span{font-size:0.85rem;color:var(--text-muted);}
+.cv-dd-list{list-style:none;display:flex;flex-direction:column;gap:0.35rem;}
+.cv-dd-list li{font-size:0.85rem;color:var(--text-muted);line-height:1.45;display:flex;gap:0.45rem;padding:0.45rem 0.6rem;background:var(--surface3);border-radius:6px;}
+.cv-dd-list li::before{content:'▸';color:var(--text-dim);flex-shrink:0;}
+.cv-dd-skill{display:flex;gap:0.55rem;background:var(--surface3);border-radius:7px;padding:0.6rem 0.75rem;margin-bottom:0.4rem;align-items:flex-start;}
+.cv-dd-skill-icon{font-size:1rem;flex-shrink:0;}
+.cv-dd-skill-name{font-size:0.82rem;font-weight:700;color:var(--text);margin-bottom:0.1rem;}
+.cv-dd-skill-cue{font-size:0.78rem;color:var(--text-muted);line-height:1.45;}
+
+@media(max-width:640px){
+  .cv-title{font-size:1.3rem;}
+  .cv-cue-list li{font-size:0.92rem;}
+  .cv-setup-grid{grid-template-columns:1fr;}
+  .cv-card{padding:1rem;}
+  .cv-nav{padding:0.7rem 1rem;}
+  .cv-dd-grid{grid-template-columns:1fr;}
+}
+
+@media(max-width:640px){
+  .grid{grid-template-columns:1fr;padding:0.9rem 1rem;}
+  .controls{padding:0.8rem 1rem;}
+  header{padding:1rem 1rem 0.85rem;}
+  .session-wrap{padding:1rem;}
+  .tabs{padding:0 0.75rem;}
+  .setup-grid{grid-template-columns:1fr;}
+}
+
+/* PITCH DIAGRAMS */
+.pitch-wrap{margin:0.75rem 0 0.25rem;border-radius:10px;overflow:hidden;background:#0d4a1e;border:1px solid rgba(255,255,255,0.12);}
+.pitch-wrap svg{display:block;width:100%;height:auto;}
+.cv-pitch-wrap{margin:0 0 1rem;border-radius:12px;overflow:hidden;background:#0d4a1e;border:1px solid rgba(255,255,255,0.15);}
+.cv-pitch-wrap svg{display:block;width:100%;height:auto;}
+
+/* SAVE / LOAD SESSIONS */
+.save-section{margin-bottom:1.25rem;}
+.save-section-label{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold);margin-bottom:0.65rem;display:flex;align-items:center;gap:0.5rem;}
+.save-section-label::after{content:'';flex:1;height:1px;background:rgba(245,197,24,0.15);}
+.save-row{display:flex;gap:0.55rem;align-items:center;flex-wrap:wrap;margin-bottom:0.75rem;}
+.save-inp{background:var(--surface2);border:1px solid var(--border-strong);border-radius:8px;color:var(--text);font-size:0.83rem;padding:0.4rem 0.7rem;outline:none;flex:1;min-width:160px;}
+.save-inp:focus{border-color:var(--gold);}
+.save-inp::placeholder{color:var(--text-dim);}
+.saved-list{display:flex;flex-direction:column;gap:0.4rem;}
+.saved-item{display:flex;align-items:center;gap:0.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.5rem 0.75rem;transition:border-color 0.15s;}
+.saved-item:hover{border-color:var(--border-strong);}
+.saved-item-info{flex:1;min-width:0;}
+.saved-item-name{font-size:0.83rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.saved-item-meta{font-size:0.7rem;color:var(--text-dim);margin-top:0.08rem;}
+.saved-item-btns{display:flex;gap:0.3rem;flex-shrink:0;}
+.si-btn{font-size:0.7rem;font-weight:600;padding:0.22rem 0.55rem;border-radius:6px;cursor:pointer;transition:all 0.15s;border:1px solid var(--border);}
+.si-btn.load{background:rgba(245,197,24,0.1);border-color:rgba(245,197,24,0.3);color:var(--gold);}
+.si-btn.load:hover{background:rgba(245,197,24,0.2);}
+.si-btn.del{background:none;border-color:var(--red-border);color:var(--red-text);}
+.si-btn.del:hover{background:var(--red-bg);}
+.no-saves{font-size:0.8rem;color:var(--text-dim);font-style:italic;padding:0.5rem 0;}
+.save-toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--surface3);border:1px solid var(--gold);border-radius:10px;color:var(--gold);font-size:0.82rem;font-weight:600;padding:0.55rem 1.2rem;z-index:999;opacity:0;transition:opacity 0.2s;pointer-events:none;}
+.save-toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-top">
+    <div class="paw">🐾</div>
+    <div>
+      <div class="brand-name">Panthers Soccer</div>
+      <div class="brand-title">Session Planner</div>
+    </div>
+  </div>
+  <div class="h-sub">Build a complete session from warm-ups, skills, games, and game-phase activities — then export a full plan.</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('warmup',this)">🔥 Warm-Up <span class="tab-badge" id="b-warmup">10</span></div>
+  <div class="tab" onclick="switchTab('skills',this)">⚽ Skills <span class="tab-badge" id="b-skills">38</span></div>
+  <div class="tab" onclick="switchTab('games',this)">🎮 SSGs <span class="tab-badge" id="b-games">12</span></div>
+  <div class="tab" onclick="switchTab('phases',this)">🗺 Game Phases <span class="tab-badge" id="b-phases">10</span></div>
+  <div class="tab" onclick="switchTab('session',this)">📋 Session <span class="tab-badge" id="b-session">0</span></div>
+  <div class="tab" onclick="switchTab('coach',this)">📱 Coach View <span class="tab-badge" id="b-coach">0</span></div>
+</div>
+
+<!-- WARMUP PANEL -->
+<div class="panel active" id="panel-warmup">
+  <div class="controls">
+    <div class="search-wrap"><span class="si">🔍</span><input type="text" id="wu-search" placeholder="Search warm-ups..." oninput="renderWarmup()"></div>
+    <div class="fgroup">
+      <button class="fbtn active" onclick="setWF('all',this)">All</button>
+      <button class="fbtn" onclick="setWF('activation',this)">Activation</button>
+      <button class="fbtn" onclick="setWF('technical',this)">Technical</button>
+      <button class="fbtn" onclick="setWF('dynamic',this)">Dynamic</button>
+      <button class="fbtn" onclick="setWF('rondo',this)">Rondo</button>
+    </div>
+    <div class="cbadge"><span id="wu-count">10</span> activities</div>
+  </div>
+  <div class="grid" id="warmup-grid"></div>
+</div>
+
+<!-- SKILLS PANEL -->
+<div class="panel" id="panel-skills">
+  <div class="controls">
+    <div class="search-wrap"><span class="si">🔍</span><input type="text" id="sk-search" placeholder="Search skills..." oninput="renderSkills()"></div>
+    <div class="fgroup">
+      <button class="fbtn active" onclick="setSF('all',this)">All</button>
+      <button class="fbtn" onclick="setSF('am',this)">Attacking (AM)</button>
+      <button class="fbtn" onclick="setSF('att',this)">Attacking</button>
+      <button class="fbtn" onclick="setSF('def',this)">Defending</button>
+      <button class="fbtn" onclick="setSF('uni',this)">Universal</button>
+    </div>
+    <div class="cbadge"><span id="sk-count">38</span> skills</div>
+  </div>
+  <div class="grid" id="skills-grid"></div>
+</div>
+
+<!-- GAMES PANEL -->
+<div class="panel" id="panel-games">
+  <div class="controls">
+    <div class="search-wrap"><span class="si">🔍</span><input type="text" id="gm-search" placeholder="Search games..." oninput="renderGames()"></div>
+    <div class="fgroup">
+      <button class="fbtn active" onclick="setGF('all',this)">All</button>
+      <button class="fbtn" onclick="setGF('att',this)">Attacking</button>
+      <button class="fbtn" onclick="setGF('def',this)">Defensive</button>
+      <button class="fbtn" onclick="setGF('trans',this)">Transition</button>
+    </div>
+    <div class="cbadge"><span id="gm-count">12</span> games</div>
+  </div>
+  <div class="grid" id="games-grid"></div>
+</div>
+
+<!-- GAME PHASES PANEL -->
+<div class="panel" id="panel-phases">
+  <div class="controls">
+    <div class="search-wrap"><span class="si">🔍</span><input type="text" id="ph-search" placeholder="Search phases..." oninput="renderPhases()"></div>
+    <div class="fgroup">
+      <button class="fbtn active" onclick="setPF('all',this)">All</button>
+      <button class="fbtn" onclick="setPF('attacking',this)">Attacking</button>
+      <button class="fbtn" onclick="setPF('defending',this)">Defending</button>
+      <button class="fbtn" onclick="setPF('transition',this)">Transition</button>
+    </div>
+    <div class="cbadge"><span id="ph-count">10</span> activities</div>
+  </div>
+  <div class="grid" id="phases-grid"></div>
+</div>
+
+<!-- SESSION PANEL -->
+<div class="panel" id="panel-session">
+  <div class="session-wrap">
+    <div class="session-meta">
+      <div class="meta-field"><div class="meta-lbl">Session name</div><input class="meta-inp" id="sess-name" placeholder="e.g. Week 3 — Final Third" style="min-width:200px;"></div>
+      <div class="meta-field"><div class="meta-lbl">Date</div><input class="meta-inp" id="sess-date" type="date" style="min-width:145px;"></div>
+      <div class="meta-field"><div class="meta-lbl">Focus</div><input class="meta-inp" id="sess-focus" placeholder="e.g. Attacking transition" style="min-width:190px;"></div>
+      <div class="total-time" id="total-time">0 min total</div>
+    </div>
+    <div class="save-section">
+      <div class="save-section-label">💾 Saved Sessions</div>
+      <div class="save-row">
+        <input class="save-inp" id="save-name-inp" placeholder="Name this session to save…">
+        <button class="act-btn primary" onclick="saveSession()" style="white-space:nowrap;">💾 Save</button>
+      </div>
+      <div class="saved-list" id="saved-list"></div>
+    </div>
+    <div id="sess-empty" class="sess-empty">
+      <div class="big">📋</div>
+      <p>Your session is empty.<br>Add items from the <em>Warm-Up</em>, <em>Skills</em>, <em>SSGs</em>, or <em>Game Phases</em> tabs.</p>
+    </div>
+    <div class="sess-items" id="sess-items"></div>
+    <div class="sess-actions" id="sess-actions" style="display:none;">
+      <button class="act-btn primary" onclick="generatePlan()">📄 Generate plan</button>
+      <button class="act-btn danger" onclick="clearSession()">✕ Clear session</button>
+    </div>
+    <div class="print-area" id="print-area">
+      <div class="copy-row"><button class="copy-btn" onclick="copyPlan()">Copy to clipboard</button></div>
+      <div class="print-content" id="print-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- COACH VIEW PANEL -->
+<div class="panel" id="panel-coach">
+  <div class="cv-wrap" id="cv-wrap">
+    <div class="cv-empty" id="cv-empty">
+      <div class="big">📱</div>
+      <p>Coach View is empty.<br>Build your session in the <em>Session</em> tab,<br>then come back here to run practice.</p>
+    </div>
+    <div id="cv-active" style="display:none;flex-direction:column;flex:1;">
+      <div class="cv-progress"><div class="cv-progress-bar" id="cv-bar"></div></div>
+      <div class="cv-nav">
+        <button class="cv-nav-btn" id="cv-prev" onclick="cvNav(-1)">◀ Prev</button>
+        <div class="cv-counter">
+          <div class="cv-counter-num" id="cv-counter-num">1 / 1</div>
+          <div class="cv-counter-sub" id="cv-counter-sub"></div>
+        </div>
+        <button class="cv-nav-btn" id="cv-next" onclick="cvNav(1)">Next ▶</button>
+      </div>
+      <div class="cv-card" id="cv-card"></div>
+    </div>
+  </div>
+</div>
+
+<footer>Panthers Soccer · Nashua South · Purple &amp; Gold</footer>
+
+<script>
+// ─── WARM-UP DATA ─────────────────────────────────────────────────────────────
+const warmups = [
+  {id:'w1',title:"Dynamic Movement Circuit",category:"activation",icon:"🏃",preview:"Five-station dynamic movement circuit — primes hips, hamstrings, and ankles before any ball work.",duration:"5 min",players:"Full group",space:"20×20 yds",cues:["High knees — drive knee to hip height, arms pumping","Butt kicks — heel to glute, stay on toes","Lateral shuffle — stay low, don't cross feet","Carioca — lead with the hip, not the shoulder","Sprint 10 yds — accelerate from a walk, don't jog into it"],drill:"Set 5 cones in a line 5 yds apart. Players complete each movement to the end and jog back. Two cycles before moving to ball work."},
+  {id:'w2',title:"Passing Pairs — On the Move",category:"technical",icon:"🎯",preview:"Partners pass and move in a defined channel — receiving on the move to simulate game tempo.",duration:"5 min",players:"Pairs",space:"30×10 yds per pair",cues:["Receive with the back foot — open your body as the ball travels","Pass while moving — don't stop to play","Communicate with a hand signal before you change direction","Every 3rd pass: turn and sprint 5 yds before passing back"],drill:"Pairs move down a 30-yd channel passing one-touch or two-touch. On coach's whistle, both sprint 10 yds before resuming. 3 reps."},
+  {id:'w4',title:"Shadow Dribbling — Position Groups",category:"technical",icon:"💨",preview:"Offensive and defensive groups dribble simultaneously in their own zones, replicating game-specific movements.",duration:"5 min",players:"Split groups",space:"Two 15×15 zones",cues:["Offensive group: practice cut inside, stop-and-go, shoulder drop","Defensive group: lateral shuffle with ball, quick direction change","All players: head up — don't stare at the ball while dribbling","On whistle: freeze and check body angle — are your hips open?"],drill:"Split offensive group (AMs + forwards) and defensive group (backs + DM) into separate zones. Coach calls moves: 'cut inside', 'drive outside', 'stop-turn'. 30 sec per move, 5 moves total."},
+  {id:'w5',title:"Activation Rondo — 5v5 Center Circle",category:"rondo",icon:"🔺",preview:"5v5 possession rondo in the center circle — high-tempo activation in a constrained space that forces quick decisions, sharp movement, and scanning before every touch.",duration:"8 min",players:"10 (two teams of 5)",space:"Center circle",cues:["Scan before the ball arrives — at least one check per touch","Move after passing — don't stand still, find a new angle immediately","Switch the point of attack before the defenders adjust","Compact defending — pressure the ball, don't ball-watch"],drill:"Two teams of 5 play possession inside the center circle. Team in possession scores a point by completing 5 consecutive passes. If the ball leaves the circle, possession switches. Rotate a fresh team in every 2–3 minutes — third team waits on the outside and comes in for the team that just defended."},
+  {id:'w6',title:"Passing Diamond — Third Man",category:"technical",icon:"🔷",preview:"Four cones set in a diamond shape. The player at the top point passes, makes a third-man run, and ends up at the opposite cone. Play is continuous — every player rotates through the point.",duration:"7 min",players:"Groups of 4–5",space:"Diamond — cones ~10 yds apart",cues:["Point player passes to either side cone and immediately cuts through the diamond","Third-man run: arrive at the opposite cone ready to receive","Weight the delivery into the runner's stride — not at their feet","Player who arrives at the opposite cone becomes the new point — play continues immediately"],drill:"Set 4 cones in a diamond: top point, left, right, and bottom point. Player at the top passes to either side cone, who lays off to the bottom cone, who delivers into the run of the top player — who arrives at the bottom cone and becomes the new point. The sequence immediately reverses direction. Play is continuous with no breaks — just keep rotating the point. Add a 5th player as a floater to increase tempo."},
+  {id:'w7',title:"GK + Back Activation",category:"activation",icon:"🧤",preview:"Goalkeepers and backs activate together with a distribution circuit before the group joins.",duration:"6 min",players:"GKs + backs",space:"Penalty area",cues:["GK: distribute to backs' feet — not over their heads","Backs: receive open-body, play back first touch when possible","Call for the ball clearly — 'feet' or 'turn' on every receive","GK: vary distribution — rolling, thrown, driven — to replicate game"],drill:"GK distributes to each back alternately. Back receives, plays one-touch back or turns and drives to midfield line. 3 rounds each back. Second round: add a passive shadow pressuring the back on receipt."},
+  {id:'w9',title:"Combination Flow — 3-Player Pattern",category:"technical",icon:"🔁",preview:"Flowing passing pattern for 3 players that replicates wall-pass and third-man timing in a structured warm-up format.",duration:"7 min",players:"Groups of 3",space:"25×15 yds",cues:["Every pass is followed by a movement — no static players","Give-and-go: pass and immediately show for the return","Third man: time your run to receive in stride — not before the pass","Increase tempo each round: first slow, second match pace, third full speed"],drill:"P1 at one end passes to P2 in the middle who gives a wall pass back, P1 plays through to P3 at the far end. P3 becomes P1. Continuous flow. Add a passive defender in round 3."},
+  {id:'w10',title:"Panther Press Warm-Up",category:"dynamic",icon:"🔥",preview:"Competitive group warm-up that activates pressing triggers before the main session — gets intensity up immediately.",duration:"6 min",players:"Full group",space:"40×30 yds",cues:["Press only on a trigger — heavy touch, head down, backward pass","Sprint at the ball — a slow press lets the opponent reset","Angle your run to force a direction, not straight at the ball","After a press, recover position immediately — don't celebrate"],drill:"Two teams of 6 in a 40×30 area. Team in possession scores by completing 6 passes. Defending team wins by pressing to win possession and holding for 3 passes. Coach calls 'trigger' at random to activate a live press sequence."}
+];
+
+// ─── SKILLS DATA ──────────────────────────────────────────────────────────────
+const skills = [
+  {id:1,title:"Check Away & Half Turn",position:"am",icon:"🎯",iconClass:"icon-am",tags:["receiving","first touch"],preview:"Check away from the ball to create separation, then open up and receive through the gate — replicates the half-turn movement used in the 4-3-3 to receive between lines.",phase:"Technical cues",cues:["P2 wall passes back to P1 immediately on receipt — one touch, no hesitation","Curl run after the wall pass — go wide around the outside of the gate","Body open as you curl — you should be facing P1 through the gate before the ball arrives"],drill:"Gate at one end, line of players at the other with one ball. P1 (from the line) passes to P2 in the middle. P2 wall passes straight back to P1, then curls left or right and around behind the gate. P1 plays the ball through the gate for P2 to receive with a half-turn. P1 then moves into the middle spot and receives a pass back from P2 with a half-turn, then plays to the next person in line. Play continues — everyone rotates through the middle."},
+  {id:2,title:"First Touch Into Space",position:"am",icon:"🎯",iconClass:"icon-am",tags:["first touch","acceleration"],preview:"First touch that creates distance from a defender and enables the next action.",phase:"Technical cues",cues:["Touch goes in the direction of your next action, not straight","Soft touch 2–3 yards ahead — not under your feet","Accelerate onto the ball after touching — don't stall"],drill:"Groups of 4: one player on each end, two in the middle. Server rolls to one middle player while the other shadow defends. Receiver takes a first touch into space and passes to the player on the far end. Middle players swap roles and the action goes back the other direction. Continuous."},
+  {id:3,title:"Wall Pass In Tight",position:"am",icon:"🔁",iconClass:"icon-am",tags:["combination","1-2"],preview:"Give-and-go through a pressing defender — the core combination of the 4-3-3.",phase:"Combination cues",cues:["Pass, then immediately show — don't stand and watch","Move before the return — not after","Return passer plays one touch back into the run","Receiver must accelerate past the defender to collect"],drill:"4v2 directional rondo: attackers earn progression by completing two consecutive wall passes."},
+  {id:4,title:"Through Ball Timing",position:"am",icon:"📐",iconClass:"icon-am",tags:["passing","vision"],preview:"Weight, angle, and timing of the pass that releases a forward in behind.",phase:"Decision cues",cues:["Pass into the space, not at the player — lead them","Wait for the defender's weight to shift before releasing","Play when the window opens — one second too late is off","Use disguise — look at the wall pass option, play the through ball"],drill:"6v4 Break the Block setup: AM must trigger a through ball within 12-second shot clock."},
+  {id:5,title:"1v0 Receiving & Turn",position:"att",icon:"🔄",iconClass:"icon-am",tags:["attacking","1v0","receiving"],preview:"Receive moving, turn cleanly, and accelerate — no defender, pure repetition of the movement pattern.",phase:"Technical cues",cues:["Receive across the body — back foot opens you to face forward","Shoulder check before the ball arrives — know your next direction","Turn in one touch when possible — two touches max","Accelerate the first step after the turn — don't drift"],drill:"1v0. Server feeds balls in from various angles, player checks, receives, turns, and drives 5 yards before returning to start. 10 reps each side. Add a cone target to drive toward after each turn."},
+  {id:6,title:"1v0 Ball Mastery Circuit",position:"att",icon:"⚽",iconClass:"icon-am",tags:["attacking","1v0","ball mastery"],preview:"Consecutive ball mastery moves at pace — inside cut, outside cut, stop-and-go, and drag-back in sequence.",phase:"Technical cues",cues:["Head up between every move — never stare at the ball","Explode after each move — the move is a fake, the acceleration is the point","Use both feet equally — every rep alternates","Plant foot close to the ball — control comes from the base, not the arms"],drill:"1v0. Set 4 cones in a 5-yard square. Player performs a set move at each cone: inside cut (cone 1), outside cut (cone 2), stop-and-go (cone 3), drag-back (cone 4). One circuit = 4 moves. Run 5 circuits, rest 30 sec. Increase pace each round."},
+  {id:7,title:"1v0 Finishing — Near & Far Post",position:"att",icon:"🥅",iconClass:"icon-am",tags:["attacking","1v0","finishing"],preview:"Repetition finishing from both sides — near post driven, far post placed. No defender, pure technique.",phase:"Technical cues",cues:["Plant foot beside the ball, pointed at target — not behind it","Near post: drive low with the instep — keep it under knee height","Far post: side-foot across goal — lock the ankle, follow through","Look up once before striking — know your target before the ball arrives"],drill:"1v0 finishing. Set two cones at the top of the box. Player starts at each cone alternately, receives a rolled feed, and finishes — alternating near post and far post targets. 5 balls each side. GK or target cones in goal. Track hit rate per session."},
+  {id:8,title:"1v1 Attacking — Beat the Defender",position:"att",icon:"💥",iconClass:"icon-w",tags:["attacking","1v1","dribbling"],preview:"Live 1v1 with a passive then active defender — use a move to create separation and drive past.",phase:"Technical cues",cues:["Slow down as you approach the defender — set up the move","Commit the defender one way with your body, go the other","Explode after the move — first step is fastest","Keep the ball on the far side from the defender after beating them"],drill:"1v1. 15-yard channel. Attacker receives, faces live defender, uses a set move (step-over, scissors, inside-out), beats them, and drives to the end line. Defender is passive for first 3 reps then live. 8 reps each role, then rotate."},
+  {id:9,title:"1v1 Finishing Under Pressure",position:"att",icon:"🎭",iconClass:"icon-fwd",tags:["attacking","1v1","finishing"],preview:"Receive, turn, and finish with a defender closing — placement over power under live pressure.",phase:"Technical cues",cues:["First touch sets up the shot — touch away from pressure, not into it","Decide far post or near post before you touch","Don't wait for the perfect angle — shoot early under pressure","Weak foot finishing earns 2 points — build the habit now"],drill:"1v1 + GK. Server plays into the striker's feet. Defender applies pressure from behind. Striker has 2 touches max to finish. 10 reps each role. Award 2 points for weak-foot finishes, 1 point for strong-foot. Track totals per round."},
+  {id:10,title:"2v2 Combination Play",position:"att",icon:"🔁",iconClass:"icon-am",tags:["attacking","2v2","combination"],preview:"Two attackers vs two defenders in a tight grid — wall pass, overlap, or through ball to score.",phase:"Combination cues",cues:["One option is never enough — always show a second option after passing","Communication: call 'wall' or 'go' before the pass so your partner reacts","If the defender tracks the runner, the ball goes through — read it","Score by playing through the end gate — combination must happen before the gate"],drill:"2v2 directional. 20×12 yd grid with a gate at each end. Attacking pair must use a combination (wall pass, overlap, or through ball) before scoring through the far gate. Defenders score by winning possession and dribbling through their gate. 5 min then rotate. Award a bonus point for any one-touch finish after the combination."},
+  {id:11,title:"2v1 Creating the Overlap",position:"att",icon:"↗️",iconClass:"icon-w",tags:["attacking","2v1","overlap"],preview:"Ball carrier draws the defender, teammate overlaps — weight the pass into the run.",phase:"Technical cues",cues:["Ball carrier: slow down to hold the defender, don't rush past them","Overlapper: time the run — go too early and you're offside, too late and the defender recovers","Weight the pass into space ahead of the runner — not at their feet","Overlapper: look to cross or cut inside after receiving — don't stop running"],drill:"2v1 in a 25×15 yd channel ending at a cross target box. Pair starts at the far end vs one defender. Attacker drives at defender to commit them, overlapper sprints the outside lane, receives the pass, delivers into the box. 8 reps each rotation. Alternate which player carries and which overlaps."},
+  {id:12,title:"1v0 Crossing — Driven & Floated",position:"att",icon:"🎯",iconClass:"icon-w",tags:["attacking","1v0","crossing"],preview:"Pure crossing repetition — driven near-post and floated far-post from both sides. No defender.",phase:"Technical cues",cues:["Near-post cross: run onto the ball at an angle, drive with the laces — keep it below knee height","Far-post cross: open the hips, whip with the instep — aim beyond the back post","Touch 1 sets up the angle, Touch 2 delivers — no more than 2 touches","Eyes on the box before delivering — know where the runners are"],drill:"1v0 crossing. Player starts on the end line or receives a wide pass, sets up in 2 touches, and delivers — alternating near-post driven and far-post floated crosses. Use a target mannequin or cone at near and back post as targets. 10 deliveries each side, track on-target rate."},
+  {id:13,title:"1v1 Defending — Jockey & Delay",position:"def",icon:"🛑",iconClass:"icon-back",tags:["defending","1v1","jockey"],preview:"Defend a 1v1 in a channel — stay on your feet, angle the attacker, and delay until help arrives.",phase:"Technical cues",cues:["Stay on your toes — weight forward, never flat-footed","Show them outside — angle your body to invite the weak side","Keep 1–2 yards distance — too close gets turned, too far invites the shot","Don't dive in — wait for the heavy touch or loss of control"],drill:"1v1 defending channel. 20×8 yds. Attacker receives and drives at the defender. Defender must jockey for 4 seconds without fouling, then can engage. If attacker reaches the end line, they score. If defender holds or wins the ball, they score. 10 reps each role."},
+  {id:14,title:"1v1 Defending — Press & Win",position:"def",icon:"⚡",iconClass:"icon-back",tags:["defending","1v1","pressing"],preview:"Recognise the press trigger and step aggressively to win the ball before the attacker can play.",phase:"Technical cues",cues:["Press triggers: back pass, head down, heavy touch — go immediately","Angle your run to show them one direction — not straight at the ball","Arrive with your body between the ball and goal","Win the ball or force the error — both count as a successful press"],drill:"1v1 pressing. Server plays a back pass to the attacker. On the back pass, defender must press immediately and win possession within 3 seconds. If they win it, they score in a mini-goal. If attacker holds, they score. 10 reps each role. Coach varies the trigger — some are genuine, some are fakes to test reading."},
+  {id:15,title:"2v2 Defending — Compact & Cover",position:"def",icon:"🛡️",iconClass:"icon-back",tags:["defending","2v2","shape"],preview:"Two defenders stay compact and connected — one pressures, one covers. Don't both chase the ball.",phase:"Technical cues",cues:["Ball-side defender: pressure the ball — limit time and space","Cover defender: stay goal-side, don't step until ball-side wins it or gets beaten","Communicate constantly — 'press', 'cover', 'man on'","If ball-side defender is beaten, cover steps in and ball-side recovers"],drill:"2v2 in a 20×15 yd grid with a full goal. Defending pair must stay connected — no more than 8 yards apart. Attacking pair tries to score. If defenders win possession, they score in a mini-goal at the other end. 5 min per round. Coach awards bonus points to defenders who show a press/cover shape on every ball."},
+  {id:16,title:"1v1 Receiving Under Pressure",position:"def",icon:"🔄",iconClass:"icon-dm",tags:["defending","1v1","pressing"],preview:"Receive between the lines with a defender pressing from behind — shield, turn, or recycle.",phase:"Technical cues",cues:["Feel pressure with your arm before it arrives — don't wait to see it","If pressed: shield and recycle — one touch back to safety","If defender is on your hip: spin off the shoulder they're not on","Never turn into pressure — always turn away from the dominant shoulder"],drill:"1v1 pressure. Player checks to receive, defender presses from behind on receipt. Player must hold for 2 seconds, then either turn and drive forward or recycle to a cone target. 10 reps each role. Track: how many successful turns vs recycles per set."},
+  {id:17,title:"2v2 Transition — Win It & Go",position:"def",icon:"💢",iconClass:"icon-dm",tags:["defending","2v2","transition"],preview:"Defend in a 2v2, win possession, and immediately transition to attack — no delay.",phase:"Tactical cues",cues:["Win the ball and look forward immediately — don't hold or dribble in your own half","First player to the ball turns and drives — second player becomes the target","Transition within 2 seconds — if you wait, the moment is gone","If you can't play forward, recycle quickly and go again"],drill:"2v2 with a goal each end. Normal 2v2 play, but the moment possession changes: the winning team must attempt to score within 5 seconds or the ball resets. If they score within 5 seconds, 2 points. After 5 seconds, 1 point for a goal. 8 min total, rotate pairs in every 2 min."},
+  {id:18,title:"1v0 Short-Short-Long",position:"uni",icon:"📐",iconClass:"icon-all",tags:["universal","1v0","passing"],preview:"Replicate the build-up passing rhythm — two short passes then a longer driven ball. Pure technique.",phase:"Technical cues",cues:["Short passes are crisp and flat — not lofted, not slow","Open body on every short pass — never square to your own target","Long ball: plant foot beside the ball, drive through the centre","Weight the long ball so it arrives at waist height — not bouncing"],drill:"1v0 with cones. Set up a short-short-long pattern: two cones 5 yards apart (short passes), one cone 20 yards away (long ball). Player passes short to cone 1, receives back, short to cone 2, receives back, drives long to cone 3. 10 reps continuous. Alternate feet on the long ball each rep."},
+  {id:19,title:"2v2 Possession — Keep It Moving",position:"uni",icon:"🔺",iconClass:"icon-all",tags:["universal","2v2","possession"],preview:"Two vs two in a tight grid — keep possession, move after passing, and create the third-man angle.",phase:"Universal cues",cues:["Move immediately after passing — standing still kills the next option","Receive half-open — back foot creates the angle for the next pass","If both defenders press one player, the other is free — play it quick","Count consecutive passes — competing against your own record builds intensity"],drill:"2v2 possession in a 12×12 yd grid. No goals — possession is the game. Team earns 1 point for every 5 consecutive passes. Defenders earn a point for every interception. Play 3 min rounds, rotate roles. Add a constraint: all passes must be one-touch after 2 mins to increase pressure."},
+  {id:20,title:"1v1 Scanning Before Receiving",position:"uni",icon:"👁️",iconClass:"icon-all",tags:["universal","1v1","awareness"],preview:"Force the scan habit under live pressure — receive, call the color, play the right target.",phase:"Universal cues",cues:["Scan at least once while the ball is in flight — not after it arrives","Head snap: quick, decisive — not a slow rotation","Call the color or number before you touch — verbal commitment forces the scan","If you can't call it, you didn't scan — reset and repeat"],drill:"1v1 + coach. Coach holds colored bibs or numbered cones behind the receiver while server plays the ball. Player must call out the color/number before receiving, then play to the correct target. Defender applies passive pressure. 10 reps each role. Make it competitive — first to 5 correct calls wins the set."}
+];
+
+// ─── GAMES DATA ───────────────────────────────────────────────────────────────
+const games = [
+  {id:'g1',title:"4v3 Gate Rondo",focus:"att",badge:"4v3",badgeClass:"badge-att",tags:["att. mid","universal"],summary:"4 attackers work the length of a narrow grid against 3 defenders. Offense scores through the end gate, defense scores through the side gates.",setup:{players:"7",space:"10×25 yds (narrow)",goals:"1 end gate (offense) + 2 side gates (defense)",duration:"5 min"},objective:"Offense scores by dribbling or passing through the end gate. Defense wins possession and scores through either side gate.",rules:["Offense attacks the length of the grid — end gate only","Defense scores through either side gate after winning possession","Ball out of bounds: possession resets to offense","Rotate defenders every 2 minutes"],scoring:"Offense: 1 point per end-gate score. Defense: 1 point per side-gate score. First to 5 wins.",skills:[{icon:"🎯",name:"Check Away & Half Turn",cue:"Create separation before receiving — body open to play forward through the end gate."},{icon:"👁️",name:"Scan Before Receiving",cue:"Scan the end gate and defender positions before the ball arrives — know your next action."}]},
+  {id:'g3',title:"2v2 + 2 Neutral Wide",focus:"att",badge:"2v2\n+2",badgeClass:"badge-att",tags:["winger","backs","#9"],summary:"Continuous crossing and finishing drill. Central 2v2 with GK in goal and neutral wide players in channels. Teams rotate after each action — defense becomes wide, offense goes to defense, new attackers come on.",setup:{players:"10+ + GK",space:"30×25 yds to goal",goals:"Full goal + 2 wide channels + 2 clearance boxes (left & right outside 18)",duration:"8 min"},objective:"Offense combines centrally, plays wide to trigger a cross, and finishes. Defense clears into the cone boxes to score. If the clear lands outside the 18, the next team in line can shoot first time.",rules:["Wide neutrals: 1-touch only — must deliver within 2 touches of receiving","One central attacker makes a box run every time ball goes wide","Defenders cannot enter wide channels","After each action: defenders rotate to wide channels, offense goes to defense, new pair attacks","Defense scores 1 point by clearing into either cone box wide of the 18","If clear falls outside the 18 to next team in line, they may shoot first time"],scoring:"Offense: 1 point per goal, 2 points if scored from a cross. Defense: 1 point per successful clearance into cone box.",skills:[{icon:"🎯",name:"Cross Delivery — 2 Touches",cue:"Touch 1 sets the angle. Touch 2 whipped in — near post driven, far post floated."},{icon:"⚽",name:"Near-Post Run & Finish",cue:"Attack the near post early — redirect low across goal, don't try to power it."}]},
+  {id:'g4',title:"3v4 Press & Recover",focus:"def",badge:"3v4",badgeClass:"badge-def",tags:["backs","def. mid","transition"],summary:"Team at midfield serves into the defensive back four. The red pressing unit reads the ball and decides: press trigger or recover shape. Defenders can play to the GK and build out to the midfield line. Subs rotate on successful defensive or offensive play.",setup:{players:"7 on field + subs + GK",space:"35×30 yds",goals:"Full goal + midfield line as target",duration:"8 min"},objective:"Red pressing unit (3) reads the play and either triggers a press or drops into recovery shape. Purple backs (4) play out from the GK to reach the midfield players. Subs rotate in on any successful play.",rules:["Midfield team serves ball into the purple backs to start each rep","Red team reads the first touch — heavy touch or back pass = press trigger","Defenders can play back to GK and try to build out to midfield line","Pressing team earns a point by winning possession and scoring in the full goal","Defending team earns a point by successfully playing the ball to the midfield line","Subs rotate in from end line (defenders) or midfield (attackers) after each successful play"],scoring:"Red press team: 1 point per turnover scored. Purple backs: 1 point per successful build-out to midfield. First to 5 wins — rotate groups.",skills:[{icon:"⚡",name:"Step to Pressure",cue:"Press trigger is a heavy touch or back pass — step fast, angle to show one direction."},{icon:"🔄",name:"Play Out Under Pressure",cue:"GK distributes to feet — backs scan first, play forward or switch, never go long blindly."}]},
+  {id:'g5',title:"5v5 Two Goals",focus:"att",badge:"5v5",badgeClass:"badge-att",tags:["att. mid","backs","universal"],summary:"Multiple teams of 5 rotate through a 36×20 yd field with a large goal and GK on each end. Teams play a 3-1 formation, track wins/losses/ties, and rotate every 3 minutes.",setup:{players:"Multiple teams of 5 + 2 GK",space:"36×20 yds",goals:"Full goal each end with GK",duration:"3 min per game, continuous rotation"},objective:"Score more goals than your opponent in 3 minutes. Teams waiting on the outside shag balls and track results. Losers rotate off, winners stay on.",rules:["Both teams play a 3-1 formation","Play for 3 minutes then rotate — waiting team comes on","Teams track their own wins / losses / ties","Defending team moves up compactly when ball goes back — no sitting deep unnecessarily","Communication required — defenders must organize verbally","GKs restart play after goals and out of bounds"],scoring:"Most goals in 3 minutes wins. Teams track cumulative record across all games.",skills:[{icon:"🛡️",name:"Shield the Back Line",cue:"Stay compact — limit space between defenders and behind the line. Move up when ball goes back."},{icon:"🔺",name:"Link Play in Triangles",cue:"3-1 shape creates triangles — always have two passing options before you receive."}]},
+  {id:'g6',title:"5v3 Build Through the Block",focus:"att",badge:"5v3",badgeClass:"badge-att",tags:["att. mid","#9","def. mid"],summary:"All 8 players start in the build zone. Five attackers combine to break through the defensive block and enter the scoring zone to finish on goal. GK in goal.",setup:{players:"8 + GK",space:"44×30 yds (two zones)",goals:"Full goal with GK + flank mini-goals",duration:"7 min"},objective:"All players start in the build zone. Attackers combine and look to break through the block into the scoring zone to finish. Defenders win possession and score in the flank mini-goals.",rules:["All players — attackers and defenders — start in the build zone","Attackers combine to break through the block and enter the scoring zone","Only 2 defenders can track into the scoring zone","12-second shot clock once the ball enters the scoring zone"],scoring:"1 point per goal. 2 points if scored within 2 touches of entering the scoring zone. Defenders: 2 points per flank mini-goal.",skills:[{icon:"💥",name:"Drive Forward to Engage",cue:"AM drives at the block — commit defenders before deciding to cut, play or go through."},{icon:"🛡️",name:"Shield the Back Line",cue:"DM holds between ball and the scoring zone — doesn't chase runners, holds the gap."}]},
+  {id:'g8',title:"4v4 + GK Press & Score",focus:"trans",badge:"4v4\n+GK",badgeClass:"badge-trans",tags:["def. mid","backs","transition"],summary:"Both teams defend compactly, press on triggers, and transition immediately to attack.",setup:{players:"8 + 2 GK",space:"50×35 yds",goals:"Full goal each end",duration:"8 min"},objective:"Win the ball through pressing triggers and score immediately.",rules:["Teams must be in own half before pressing","No long balls — all restarts through midfield","Press win + goal within 5 sec = 2 bonus points","GKs can pass but cannot score"],scoring:"1 point per goal. 2 bonus points for winning and scoring within 5 seconds.",skills:[{icon:"✂️",name:"Intercept the pass",cue:"DM watches the passer's eyes — steps late and fast to cut the lane."},{icon:"🔥",name:"Press trigger — win it high",cue:"Lead the press on back pass — angle sideways, call it loud."}]},
+  {id:'g9',title:"6v4 Combination to Finish",focus:"att",badge:"6v4",badgeClass:"badge-att",tags:["att. mid","#9","winger"],summary:"Six attackers combine through a compact block of four and finish on goal with a GK. Two holding players stay behind the midfield line and recycle possession only.",setup:{players:"12 + GK",space:"50×40 yds",goals:"Full goal with GK + 4 flank mini-goals",duration:"8 min"},objective:"Six attackers replicate game-speed combinations — wall passes, through balls, and wide entries — to break down a 4-player block and finish. Two purple holding players cannot cross the midfield line.",rules:["Two holding players (H) cannot cross the midfield line — recycle possession only","Must complete at least 3 passes before shooting","Point deducted for two consecutive backward passes","Defenders win possession and score in flank mini-goals","Play resets with new ball from coach after each finish"],scoring:"1 point per goal. 2 points for a goal off a 2+ player combination before the shot.",skills:[{icon:"🔁",name:"Wall Pass In Tight",cue:"Pass and immediately show — move before the return."},{icon:"📐",name:"Through Ball Timing",cue:"Wait for the defender's weight to shift — play when the window opens."}]},
+  {id:'g10',title:"3v2 Hold-Up & Link",focus:"att",badge:"3v2",badgeClass:"badge-att",tags:["#9","att. mid"],summary:"Two AMs combine with a #9 to link, hold up, and finish against two defenders and a GK.",setup:{players:"5 + GK",space:"25×20 yds final third",goals:"Full goal + 2 midfield mini-goals",duration:"5 min"},objective:"9 holds up against one defender, links with arriving AM, and the trio finishes.",rules:["9 must receive with back to goal at least once","AMs cannot enter box until 9 has touched the ball","If 9 loses possession before lay-off, play resets","Defenders earn 2 points for winning directly off hold-up"],scoring:"1 point per goal. 2 points within 2 touches of the 9's lay-off.",skills:[{icon:"🏗️",name:"Back-to-goal hold-up",cue:"Wide base, pin with the arm — lay off crisp and flat, not lofted."},{icon:"✨",name:"Flick combination",cue:"One touch only in tight — flick toward the runner's preferred foot."}]},
+  {id:'g11',title:"5v5 Cover & Recover",focus:"def",badge:"5v5",badgeClass:"badge-def",tags:["backs","def. mid","transition"],summary:"Both teams start on the same side of a short field. Offense makes 4 passes then plays a through ball into the attack zone. Defenders cannot enter the attack zone until the ball is played — forcing immediate recovery. Field is intentionally short so through balls must be weighted perfectly to beat the GK but stay in play.",setup:{players:"10 + GK",space:"Short field — 35×40 yds, split into build zone and attack zone",goals:"Full goal with GK at the attack end only",duration:"8 min"},objective:"Offense makes 4 passes in the build zone then plays a through ball into the attack zone for a runner. Defenders must recover into the attack zone after the ball is played — they cannot enter before. Weight of the through ball is critical: too hard and it runs to the GK, too soft and defenders catch up.",rules:["All players start in the build zone — defenders included","Offense must complete 4 passes before playing into the attack zone","Defenders cannot enter the attack zone until the ball is played through","Once the ball enters the attack zone it is live — attackers finish, defenders recover","Through ball must stay in bounds — GK collects anything too heavy","Rotate attacking and defending teams every 3 minutes"],scoring:"1 point per goal. 2 points if scored before any defender enters the attack zone.",skills:[{icon:"🏃",name:"Cover and Recover",cue:"Sprint goal-side the moment the ball is played through — diagonal run, don't chase the ball."},{icon:"📐",name:"Through Ball Timing",cue:"Weight is everything — thread it beyond the defensive line but short enough the GK can't reach it."}]},
+  {id:'g12',title:"4v3 Build From the Back",focus:"trans",badge:"4v3",badgeClass:"badge-trans",tags:["backs","def. mid","att. mid"],summary:"Four defenders and a DM build out from the GK under pressure from three attackers.",setup:{players:"7 + GK",space:"40×35 yds",goals:"2 far mini-goals + GK goal",duration:"7 min"},objective:"Defensive group builds through the press to reach mini-goals. Press wins it and attacks the GK goal.",rules:["GK starts every sequence — no long balls","Press cannot engage the GK — begins on release","Build-out team needs 3 passes minimum before scoring","Pressing team scores in GK goal — no GK for them"],scoring:"Build-out: 1 point per mini-goal, 2 points in 5 passes or fewer. Press: 2 points per goal.",skills:[{icon:"🔄",name:"Play out under pressure",cue:"Open body before GK plays — first option forward, second switch."},{icon:"👤",name:"Cover shadow positioning",cue:"DM positions between ball and most dangerous receiver — move as ball moves."}]}
+];
+
+// ─── GAME PHASES DATA ─────────────────────────────────────────────────────────
+const phases = [
+  {id:'p1',title:"Build-Out From the Back — 6v6",phase:"attacking",badge:"6v6",badgeClass:"badge-phase",tags:["build-up","backs","def. mid"],summary:"Six purple players in a 3-3 formation build out from the GK against six red defenders pressing from the goal side. Build through the press and advance to the midfield line.",setup:{players:"12 + GK",space:"Full half",goals:"Full goal with GK + 3 mini-goals at midfield",duration:"12 min"},objective:"Purple team builds from GK in a 3-3 shape, plays through the red press, and reaches the midfield line. Red team presses from the goal side and scores in the full goal if they win possession.",principles:["GK distributes to a center back — purple backs split wide in a 3-3 shape","Backs carry forward when the press commits — vertical progression over sideways safety","Middle line of three recycles and connects — face sideways, one or two touches maximum","If red team wins possession: immediate vertical counter — score in the full goal"],coaching:["Freeze play and ask: 'Is the 3-3 shape maintained? Are the wide players offering angles?'","Challenge: first team to successfully build to midfield 5 times wins","Progression: add a pressing trigger rule — red can only press on a back pass or heavy touch"],skills:[{icon:"🔄",name:"Play Out Under Pressure",cue:"Scan before GK plays — first option forward, second switch, never long blindly."},{icon:"👤",name:"Cover Shadow Positioning",cue:"Middle three position between ball and most dangerous receiver — move as ball moves."}]},
+  {id:'p2',title:"Half-Space Combination — 10v7",phase:"attacking",badge:"10v7",badgeClass:"badge-phase",tags:["att. mid","winger","#9","half-space"],summary:"Full attacking group in 4-3-3 shape combines to enter and finish from the half-spaces against a mid-block of seven defenders.",setup:{players:"17 + GK",space:"60×50 yds attacking half",goals:"Full goal + 4 half-space entry gates",duration:"12 min"},objective:"Attacking group builds possession, triggers a half-space entry via AM carry or winger cut, and finishes. Defending group wins it and counter-attacks to wide mini-goals.",principles:["Wingers invert into half-spaces — fullbacks overlap to provide width","AM carries forward to engage the defensive block before releasing","9 drops short to link play or spins in behind on the carry","Attacking team must score through a half-space gate — central route scores 0 points"],coaching:["Count half-space entries per set — target 3+ per 4-minute block","Freeze when AM is on the ball: are the wingers in the half-space? Is 9 showing short?","Progression: defending team earns 2 points for winning before the half-space entry"],skills:[{icon:"💥",name:"Drive forward to engage",cue:"AM carries at speed — commit defenders before cutting, playing, or going through."},{icon:"↗️",name:"Half-space dribble",cue:"Enter at an angle — draw the CB out before releasing the shot or through ball."}]},
+  {id:'p3',title:"Wide Attack With Overlap — 11v8",phase:"attacking",badge:"11v8",badgeClass:"badge-phase",tags:["winger","backs","#9","crossing"],summary:"Full team in 4-3-3 shape. Fullbacks overlap wingers to create wide 2v1s and deliver crosses into the box for forwards to finish.",setup:{players:"19 + GK",space:"Full attacking half + box",goals:"Full goal",duration:"12 min"},objective:"Build possession centrally, trigger wide with an overlap, and score from a cross. Defending group transitions to score in two counter-attack goals.",principles:["Winger receives wide and holds position — fullback overlaps immediately on receipt","Winger decides: hold and lay off to the overlapping FB, or cut inside while FB runs the channel","9 attacks near post; AM attacks back post — two runners every cross","Defending team transitions within 3 seconds of winning possession"],coaching:["Track: how many crosses were delivered vs how many became shots?","Freeze and ask: 'Where is the overlapping fullback? Is there a near-post runner?'","Progression: winger must dummy on first touch — FB overlap is the primary option"],skills:[{icon:"🎯",name:"Cross delivery — 2 touches",cue:"Touch 1 sets the angle, touch 2 whips in — near post driven, far post floated."},{icon:"⚽",name:"Near-post run & finish",cue:"Start from behind the defender, attack the space in front of the ball — redirect low."}]},
+  {id:'p4',title:"Final Third Combination — 8v6",phase:"attacking",badge:"8v6",badgeClass:"badge-phase",tags:["att. mid","#9","winger","finishing"],summary:"Full offensive group (AMs + forwards) combines in the final third against six defenders to create and score.",setup:{players:"14 + GK",space:"Final third + box",goals:"Full goal + 2 counter-attack mini-goals",duration:"10 min"},objective:"Offensive group uses wall passes, flick combinations, and half-space entries to score against a compact defensive block.",principles:["9 links — every attack must go through the striker at least once before a shot","AMs arrive late into the box on every chance — no early runners","Wingers deliver from wide or cut inside — read the 9's movement to decide","Score 2 points for any goal that involves the 9 as the link player"],coaching:["Count: how many shots involved the 9 as a link? Target 50%+","Progression: allow only 10 seconds in the final third before possession is turned over","Regression: play 8v4 to build confidence in the combinations"],skills:[{icon:"🏗️",name:"Back-to-goal hold-up",cue:"Wide base, pin with the arm, feel the shoulder — lay off crisp and flat."},{icon:"✨",name:"Flick combination",cue:"One touch only — flick to the runner's preferred foot, find rebound position."}]},
+  {id:'p5',title:"Wave Press — Win It High 10v10",phase:"defending",badge:"10v10",badgeClass:"badge-phase",tags:["def. mid","backs","pressing","transition"],summary:"Full team shape runs a structured wave press from the front — wingers trigger, DM covers, backs hold the line.",setup:{players:"20 + 2 GK",space:"Full half to 3/4 field",goals:"Full goal each end",duration:"12 min"},objective:"Panthers press in waves: 9 + wingers press first, DM provides cover, backs hold the line. Win the ball high and score immediately.",principles:["Press trigger: GK in hand or back pass to a center back — front three press immediately","9 angle-runs to force the ball toward the weaker side — don't press straight on","DM steps aggressively to cut off the midfielder receiving — call it loudly","If press is beaten: immediate shape recovery — no chasing, compact the block"],coaching:["Track: time from trigger to press contact — target under 3 seconds","Freeze when press is beaten: did the DM drop? Did the backs hold?","Challenge: score within 5 seconds of winning the ball — bonus 2 points"],skills:[{icon:"🔥",name:"Press trigger — win it high",cue:"Lead the press on back pass — force toward sideline, call it loud so wingers react."},{icon:"✂️",name:"Intercept the pass",cue:"DM watches the passer's eyes — step late and fast to cut the lane, not chase."}]},
+  {id:'p6',title:"Low Block — Defend the Box 9v9",phase:"defending",badge:"9v9",badgeClass:"badge-phase",tags:["backs","def. mid","defensive shape"],summary:"Full defensive group holds a compact low block, defends crosses and combinations, and transitions to counter on winning possession.",setup:{players:"18 + 2 GK",space:"Defensive half",goals:"Full goal + 2 counter mini-goals at halfway",duration:"12 min"},objective:"Defensive group holds shape in a low block, defends waves of attacks, and transitions to the counter-attack mini-goals when possession is won.",principles:["Backs stay compact — no individual stepping unless the ball-carrier is alone","DM holds the gate between the defensive line and midfield — denies all passes to the 9","When the ball goes wide: far-side back tucks in, near-side back engages — no tunnel","Win possession: immediate transition — play forward within 2 touches"],coaching:["Count: how many times was the 9 played in behind the defensive line? Target 0","Freeze in wide situations: is the far-side back tucked? Is DM in cover shadow?","Progression: attacking team gets unlimited time to build — force defensive patience"],skills:[{icon:"🛡️",name:"Shield the back line",cue:"Stay goal-side at all times — don't follow runners, hold the position and pass them off."},{icon:"🛑",name:"Jockeying 1v1",cue:"Stay on toes, 1–2 yards, angle body to show outside — wait for the attacker to lose control."}]},
+  {id:'p7',title:"Positive Transition — Counter Attack 9v7",phase:"transition",badge:"9v7",badgeClass:"badge-phase",tags:["transition","att. mid","winger","#9"],summary:"Panthers win the ball in their half and immediately transition to a fast counter-attack with vertical runs from all positions.",setup:{players:"16 + 2 GK",space:"Full field",goals:"Full goal each end",duration:"12 min"},objective:"When Panthers win possession, they transition immediately to attack at speed — no more than 3 passes before a shot must be attempted.",principles:["On winning possession: immediate vertical pass forward — don't hold or recycle","Wingers burst forward on the counter — blind-side runs in behind the defensive line","9 holds the forward run — arrives last but drives to the net","Attacking team must attempt a shot within 3 passes of winning possession"],coaching:["Count: average passes before transition shot — target 3 or fewer","Freeze when possession is won: are the wingers already moving forward?","Challenge: transition goal within 5 seconds earns 3 points — creates urgency"],skills:[{icon:"🌀",name:"Drop and spin",cue:"9 checks short to drag CB forward, then spins behind — passer holds one beat."},{icon:"🚀",name:"Receive and accelerate",cue:"First touch targets open space forward — don't reset, go immediately."}]},
+  {id:'p8',title:"Negative Transition — Reset the Shape 9v9",phase:"transition",badge:"9v9",badgeClass:"badge-phase",tags:["transition","backs","def. mid","defensive shape"],summary:"Panthers lose possession and immediately recover into a compact defensive shape — blocking counter-attack lanes before the opposition can attack.",setup:{players:"18 + 2 GK",space:"Full field",goals:"Full goal each end",duration:"12 min"},objective:"When possession is lost, all 10 outfield players sprint to a compact shape within 3 seconds — blocking the transition before it becomes a counter.",principles:["On losing possession: closest player presses immediately to slow the transition","DM drops between the ball and the defensive line — blocks the vertical pass","Wingers recover wide-to-central — don't track back straight","Backs hold position — don't step to press; the defensive line is the reference"],coaching:["Count: number of counter-attack goals conceded — target 0 per 10 minutes","Freeze immediately on transition: are wingers recovering? Is DM between ball and goal?","Challenge: if opposing team scores within 5 seconds of winning possession, 2 points"],skills:[{icon:"🏃",name:"Cover and recover",cue:"Sprint diagonal toward goal — goal-side first. Communicate with your center back."},{icon:"🛡️",name:"Shield the back line",cue:"DM holds the gap — doesn't step or chase, stays between ball and defensive line."}]},
+  {id:'p9',title:"Set Piece — Attacking Corners & FKs",phase:"attacking",badge:"SET\nPIECE",badgeClass:"badge-phase",tags:["set piece","#9","backs","aerial"],summary:"Panthers run structured corner and direct free kick routines targeting near-post flick-ons, back-post headers, and second-ball rebounds.",setup:{players:"Full group",space:"Attacking third",goals:"Full goal",duration:"10 min"},objective:"Score from at least 3 different set-piece routines across the session — near post, back post, and direct FK.",principles:["Corner: near-post runner creates, back-post runner converts — always two runners","Direct FK: wall sets up, one player steps over, striker shoots low and hard at the near post","Second-ball awareness: two players hold outside the box for rebounds","Practice delivery consistency: every corner is driven, not lofted"],coaching:["Run each routine 5 times before moving to the next","Track conversion rate per routine — post results after the block","Challenge: score from all 3 routines to earn a team point"],skills:[{icon:"🎯",name:"Back-post header",cue:"Delay your run — arrive as the ball arrives. Head downward and across goal."},{icon:"⚽",name:"Near-post run & finish",cue:"Attack the space in front of the ball — redirect, don't shoot. Low finish, far corner."}]},
+  {id:'p10',title:"Set Piece — Defensive Shape vs Corners",phase:"defending",badge:"DEF\nSET",badgeClass:"badge-phase",tags:["set piece","backs","defensive shape","aerial"],summary:"Panthers defend corners and free kicks as a unit — zonal marking with man-marking on key threats. Clear first, ask questions later.",setup:{players:"Full group",space:"Defensive third + full pitch",goals:"Full goal",duration:"10 min"},objective:"Defend a full set-piece block without conceding — clear every ball high, wide, and away from danger.",principles:["Two backs mark the posts — never leave the post uncovered on any delivery","DM holds the 6-yard box edge — attacks any second-ball that drops short","Center backs attack the ball at its highest point — don't wait for it to drop","First player to the ball clears long — no playing out under pressure in the box"],coaching:["Run 10 consecutive corners and count how many are cleanly cleared","Track: did any ball drop to an uncontested attacker in the box? Address the gap","Progression: add a second FK variant after 5 corners are defended successfully"],skills:[{icon:"🎯",name:"Defensive heading — clear",cue:"Attack the ball — head through the bottom half for height and distance. Call 'mine' early."},{icon:"🏃",name:"Cover and recover",cue:"If beaten in the air, sprint goal-side immediately — don't watch the ball."}]}
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let wuFilter='all', skFilter='all', gmFilter='all', phFilter='all';
+let session=[];
+let openCards=new Set();
+let dragSrc=null;
+let cvIdx=0;
+
+// ─── TABS ────────────────────────────────────────────────────────────────────
+function switchTab(name,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  el.classList.add('active');
+  if(name==='session') renderSession();
+  if(name==='coach') renderCoachView();
+}
+
+// ─── TAG HELPERS ─────────────────────────────────────────────────────────────
+function posLabel(p){return{am:'Att. Mid',att:'Attacking',def:'Defending',uni:'Universal',universal:'Universal'}[p]||p;}
+function posTagCls(p){return{am:'',att:'gold',def:'coral',uni:'',universal:''}[p]||'';}
+function gmTagCls(t){if(['att. mid','#9','winger'].includes(t))return'';if(t==='transition')return'green';if(t==='backs')return'coral';if(t==='def. mid')return'blue';return'gold';}
+function phTagCls(t){if(t==='attacking')return'gold';if(t==='defending')return'coral';if(t==='transition')return'green';return'';}
+
+// ─── ADD BUTTON ──────────────────────────────────────────────────────────────
+function addBtn(type,id){
+  const inSess=session.some(i=>i.type===type&&i.id==id);
+  return `<button class="add-btn${inSess?' added':''}" onclick="toggleSess('${type}',${typeof id==='number'?id:"'"+id+"'"},event)">${inSess?'✓ In session':'+ Add to session'}</button>`;
+}
+
+function toggleSess(type,id,e){
+  e.stopPropagation();
+  const already=session.some(i=>i.type===type&&i.id==id);
+  if(already){session=session.filter(i=>!(i.type===type&&i.id==id));}
+  else{const def={skill:10,game:15,warmup:8,phase:12};session.push({type,id,minutes:def[type]||10});}
+  updateBadge();
+  if(type==='warmup')renderWarmup();
+  else if(type==='skill')renderSkills();
+  else if(type==='game')renderGames();
+  else renderPhases();
+}
+
+function updateBadge(){
+  document.getElementById('b-session').textContent=session.length;
+  document.getElementById('b-coach').textContent=session.length;
+}
+
+// ─── WARM-UP RENDER ──────────────────────────────────────────────────────────
+function setWF(f,btn){wuFilter=f;document.querySelectorAll('#panel-warmup .fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderWarmup();}
+function renderWarmup(){
+  const q=document.getElementById('wu-search').value.toLowerCase();
+  const f=warmups.filter(w=>{
+    const mc=wuFilter==='all'||w.category===wuFilter;
+    const mq=!q||w.title.toLowerCase().includes(q)||w.preview.toLowerCase().includes(q)||w.cues.some(c=>c.toLowerCase().includes(q));
+    return mc&&mq;
+  });
+  document.getElementById('wu-count').textContent=f.length;
+  document.getElementById('b-warmup').textContent=f.length;
+  const g=document.getElementById('warmup-grid');
+  if(!f.length){g.innerHTML='<div class="empty-card">No warm-ups match your search.</div>';return;}
+  g.innerHTML=f.map(w=>{
+    const isO=openCards.has('wu'+w.id);
+    return`<div class="card${isO?' open':''}" id="wu${w.id}" onclick="toggleCard(this,event)">
+      <div class="card-top">
+        <div class="card-icon icon-warmup">🔥</div>
+        <div class="card-meta">
+          <div class="card-title">${w.title}</div>
+          <div class="tag-row"><span class="tag orange">${w.category}</span><span class="tag">${w.duration}</span><span class="tag">${w.players}</span></div>
+        </div>
+        <div class="chevron">▾</div>
+      </div>
+      <div class="card-preview">${w.preview}</div>
+      <div class="card-body">
+        <div class="phase-lbl">Coaching cues</div>
+        <ul class="cue-list">${w.cues.map(c=>`<li>${c}</li>`).join('')}</ul>
+        <div class="drill-box"><div class="drill-lbl">Setup</div><div class="drill-txt"><strong style="color:var(--text-muted)">${w.players} · ${w.space} · ${w.duration}</strong><br>${w.drill}</div></div>
+        ${addBtn('warmup',w.id)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── SKILLS RENDER ────────────────────────────────────────────────────────────
+function setSF(f,btn){skFilter=f;document.querySelectorAll('#panel-skills .fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderSkills();}
+function renderSkills(){
+  const q=document.getElementById('sk-search').value.toLowerCase();
+  const f=skills.filter(s=>{
+    const mp=skFilter==='all'||s.position===skFilter||(skFilter==='att'&&s.position==='att')||(skFilter==='def'&&s.position==='def')||(skFilter==='uni'&&(s.position==='uni'||s.position==='universal'));
+    const mq=!q||s.title.toLowerCase().includes(q)||s.tags.some(t=>t.toLowerCase().includes(q))||s.preview.toLowerCase().includes(q)||s.cues.some(c=>c.toLowerCase().includes(q));
+    return mp&&mq;
+  });
+  document.getElementById('sk-count').textContent=f.length;
+  document.getElementById('b-skills').textContent=f.length;
+  const g=document.getElementById('skills-grid');
+  if(!f.length){g.innerHTML='<div class="empty-card">No skills match your search.</div>';return;}
+  g.innerHTML=f.map(s=>{
+    const isO=openCards.has('sk'+s.id);
+    return`<div class="card${isO?' open':''}" id="sk${s.id}" onclick="toggleCard(this,event)">
+      <div class="card-top">
+        <div class="card-icon ${s.iconClass}">${s.icon}</div>
+        <div class="card-meta">
+          <div class="card-title">${s.title}</div>
+          <div class="tag-row"><span class="tag ${posTagCls(s.position)}">${posLabel(s.position)}</span>${s.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        </div>
+        <div class="chevron">▾</div>
+      </div>
+      <div class="card-preview">${s.preview}</div>
+      <div class="card-body">
+        ${renderDiagram('skill',s.id,'card')}
+        <div class="phase-lbl">${s.phase}</div>
+        <ul class="cue-list">${s.cues.map(c=>`<li>${c}</li>`).join('')}</ul>
+        <div class="drill-box"><div class="drill-lbl">Drill idea</div><div class="drill-txt">${s.drill}</div></div>
+        ${addBtn('skill',s.id)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── GAMES RENDER ────────────────────────────────────────────────────────────
+function setGF(f,btn){gmFilter=f;document.querySelectorAll('#panel-games .fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderGames();}
+function renderGames(){
+  const q=document.getElementById('gm-search').value.toLowerCase();
+  const f=games.filter(g=>{
+    const mf=gmFilter==='all'||g.focus===gmFilter;
+    const mq=!q||g.title.toLowerCase().includes(q)||g.tags.some(t=>t.toLowerCase().includes(q))||g.summary.toLowerCase().includes(q)||g.skills.some(s=>s.name.toLowerCase().includes(q));
+    return mf&&mq;
+  });
+  document.getElementById('gm-count').textContent=f.length;
+  document.getElementById('b-games').textContent=f.length;
+  const g=document.getElementById('games-grid');
+  if(!f.length){g.innerHTML='<div class="empty-card">No games match.</div>';return;}
+  g.innerHTML=f.map(gm=>{
+    const isO=openCards.has('gm'+gm.id);
+    return`<div class="card${isO?' open':''}" id="gm${gm.id}" onclick="toggleCard(this,event)">
+      <div class="card-top">
+        <div class="badge ${gm.badgeClass}">${gm.badge}</div>
+        <div class="card-meta">
+          <div class="card-title">${gm.title}</div>
+          <div class="tag-row">${gm.tags.map(t=>`<span class="tag ${gmTagCls(t)}">${t}</span>`).join('')}</div>
+        </div>
+        <div class="chevron">▾</div>
+      </div>
+      <div class="card-preview">${gm.summary}</div>
+      <div class="card-body">
+        ${renderDiagram('game',gm.id,'card')}
+        <div class="gsec"><div class="slbl">Setup</div><div class="setup-grid"><div class="setup-item"><strong>Players</strong>${gm.setup.players}</div><div class="setup-item"><strong>Space</strong>${gm.setup.space}</div><div class="setup-item"><strong>Goals</strong>${gm.setup.goals}</div><div class="setup-item"><strong>Duration</strong>${gm.setup.duration}</div></div></div>
+        <div class="gsec"><div class="slbl">Objective</div><div class="obj-box">${gm.objective}</div></div>
+        <div class="gsec"><div class="slbl">Rules</div><ul class="rule-list">${gm.rules.map(r=>`<li>${r}</li>`).join('')}</ul></div>
+        <div class="gsec"><div class="slbl">Scoring</div><div class="score-box">${gm.scoring}</div></div>
+        <div class="gsec"><div class="slbl">Skills trained</div><div class="skill-links">${gm.skills.map(s=>`<div class="skill-link"><div class="sl-icon">${s.icon}</div><div><div class="sl-name">${s.name}</div><div class="sl-cue">${s.cue}</div></div></div>`).join('')}</div></div>
+        <div class="gsec" style="padding-top:0.4rem;padding-bottom:0.7rem;">${addBtn('game',gm.id)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── PHASES RENDER ───────────────────────────────────────────────────────────
+function setPF(f,btn){phFilter=f;document.querySelectorAll('#panel-phases .fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderPhases();}
+function renderPhases(){
+  const q=document.getElementById('ph-search').value.toLowerCase();
+  const f=phases.filter(p=>{
+    const mf=phFilter==='all'||p.phase===phFilter;
+    const mq=!q||p.title.toLowerCase().includes(q)||p.tags.some(t=>t.toLowerCase().includes(q))||p.summary.toLowerCase().includes(q);
+    return mf&&mq;
+  });
+  document.getElementById('ph-count').textContent=f.length;
+  document.getElementById('b-phases').textContent=f.length;
+  const g=document.getElementById('phases-grid');
+  if(!f.length){g.innerHTML='<div class="empty-card">No game phase activities match.</div>';return;}
+  g.innerHTML=f.map(p=>{
+    const isO=openCards.has('ph'+p.id);
+    return`<div class="card${isO?' open':''}" id="ph${p.id}" onclick="toggleCard(this,event)">
+      <div class="card-top">
+        <div class="badge ${p.badgeClass}">${p.badge}</div>
+        <div class="card-meta">
+          <div class="card-title">${p.title}</div>
+          <div class="tag-row"><span class="tag ${phTagCls(p.phase)}">${p.phase}</span>${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        </div>
+        <div class="chevron">▾</div>
+      </div>
+      <div class="card-preview">${p.summary}</div>
+      <div class="card-body">
+        ${renderDiagram('phase',p.id,'card')}
+        <div class="gsec"><div class="slbl">Setup</div><div class="setup-grid"><div class="setup-item"><strong>Players</strong>${p.setup.players}</div><div class="setup-item"><strong>Space</strong>${p.setup.space}</div><div class="setup-item"><strong>Goals</strong>${p.setup.goals}</div><div class="setup-item"><strong>Duration</strong>${p.setup.duration}</div></div></div>
+        <div class="gsec"><div class="slbl">Objective</div><div class="obj-box">${p.objective}</div></div>
+        <div class="gsec"><div class="slbl">Game model principles</div><ul class="rule-list">${p.principles.map(r=>`<li>${r}</li>`).join('')}</ul></div>
+        <div class="gsec"><div class="slbl">Coaching actions</div><ul class="rule-list">${p.coaching.map(r=>`<li>${r}</li>`).join('')}</ul></div>
+        <div class="gsec"><div class="slbl">Skills reinforced</div><div class="skill-links">${p.skills.map(s=>`<div class="skill-link"><div class="sl-icon">${s.icon}</div><div><div class="sl-name">${s.name}</div><div class="sl-cue">${s.cue}</div></div></div>`).join('')}</div></div>
+        <div class="gsec" style="padding-top:0.4rem;padding-bottom:0.7rem;">${addBtn('phase',p.id)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── CARD TOGGLE ─────────────────────────────────────────────────────────────
+function toggleCard(el,e){
+  if(e.target.classList.contains('add-btn'))return;
+  el.classList.toggle('open');
+}
+
+// ─── SESSION RENDER ──────────────────────────────────────────────────────────
+function getLookup(type,id){
+  if(type==='warmup')return warmups.find(w=>w.id==id);
+  if(type==='skill')return skills.find(s=>s.id==id);
+  if(type==='game')return games.find(g=>g.id==id);
+  if(type==='phase')return phases.find(p=>p.id==id);
+}
+function typeLabel(t){return{warmup:'Warm-Up',skill:'Skill',game:'SSG',phase:'Game Phase'}[t]||t;}
+function typeCls(t){return{warmup:'warmup',skill:'skill',game:'game',phase:'phase'}[t]||'skill';}
+
+function renderSession(){
+  const empty=document.getElementById('sess-empty');
+  const items=document.getElementById('sess-items');
+  const actions=document.getElementById('sess-actions');
+  const printArea=document.getElementById('print-area');
+  if(!session.length){
+    empty.style.display='block';items.innerHTML='';
+    actions.style.display='none';printArea.classList.remove('show');
+    document.getElementById('total-time').textContent='0 min total';
+    return;
+  }
+  empty.style.display='none';actions.style.display='flex';
+  const total=session.reduce((s,i)=>s+(i.minutes||0),0);
+  document.getElementById('total-time').textContent=total+' min total';
+  items.innerHTML=session.map((item,idx)=>{
+    const d=getLookup(item.type,item.id);
+    if(!d)return'';
+    const icon=item.type==='warmup'?'🔥':item.type==='phase'?(d.badge||'🗺'):item.type==='game'?(d.badge||'🎮'):(d.icon||'⚽');
+    const sub=item.type==='warmup'?`${d.category} · ${d.players}`:item.type==='skill'?`${posLabel(d.position)} · ${d.phase}`:item.type==='game'?`${d.tags.join(' · ')} · ${d.setup.space}`:`${d.phase} · ${d.setup.players}`;
+    const key=`${item.type}_${item.id}`;
+    return`<div class="sb" id="sbi-${idx}" draggable="true" ondragstart="dragStart(event,${idx})" ondragover="dragOver(event,${idx})" ondragleave="dragLeave(event,${idx})" ondrop="dragDrop(event,${idx})" ondragend="dragEnd()">
+      <div class="sb-hd">
+        <span class="sb-drag" title="Drag to reorder">⠿</span>
+        <div class="sb-num">${idx+1}</div>
+        <div class="sb-ico" style="font-size:${item.type==='phase'||item.type==='game'?'0.68rem':'1rem'};font-weight:800;">${icon.replace('\n',' ')}</div>
+        <div class="sb-info">
+          <div class="sb-title">${d.title}</div>
+          <div class="sb-sub">${sub}</div>
+        </div>
+        <span class="sb-type ${typeCls(item.type)}">${typeLabel(item.type)}</span>
+        <div class="sb-time">
+          <input type="number" min="1" max="90" value="${item.minutes}" step="1" oninput="updMin(${idx},this.value)" onclick="event.stopPropagation()">
+          <span class="sb-time-lbl">min</span>
+        </div>
+        <button class="sb-toggle" onclick="toggleSBCues('${key}',event)">▾</button>
+        <button class="sb-rm" onclick="removeSess(${idx})">✕</button>
+      </div>
+      <div class="sb-cues" id="sbcues-${key}">
+        ${buildCues(item,d)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildCues(item,d){
+  if(item.type==='warmup'){
+    return`<ul class="sb-cue-list">${d.cues.map(c=>`<li>${c}</li>`).join('')}</ul>
+    <div class="sb-drill"><div class="sb-drill-lbl">Setup & drill</div>${d.players} · ${d.space}<br>${d.drill}</div>`;
+  }
+  if(item.type==='skill'){
+    return`<ul class="sb-cue-list">${d.cues.map(c=>`<li>${c}</li>`).join('')}</ul>
+    <div class="sb-drill"><div class="sb-drill-lbl">Drill</div>${d.drill}</div>`;
+  }
+  if(item.type==='game'){
+    return`<div class="sb-drill" style="margin-bottom:0.4rem;"><div class="sb-drill-lbl">Objective</div>${d.objective}</div>
+    <ul class="sb-cue-list">${d.skills.map(s=>`<li><strong style="color:var(--text-muted)">${s.name}:</strong> ${s.cue}</li>`).join('')}</ul>
+    <div class="sb-drill"><div class="sb-drill-lbl">Scoring</div>${d.scoring}</div>`;
+  }
+  if(item.type==='phase'){
+    return`<div class="sb-drill" style="margin-bottom:0.4rem;"><div class="sb-drill-lbl">Objective</div>${d.objective}</div>
+    <ul class="sb-cue-list">${d.principles.map(p=>`<li>${p}</li>`).join('')}</ul>
+    <div class="sb-drill"><div class="sb-drill-lbl">Coaching actions</div>${d.coaching.join('<br>')}</div>`;
+  }
+  return'';
+}
+
+function toggleSBCues(key,e){
+  e.stopPropagation();
+  const el=document.getElementById('sbcues-'+key);
+  const sb=el.closest('.sb');
+  if(el)sb.classList.toggle('sb-open');
+}
+
+function updMin(idx,val){
+  if(session[idx])session[idx].minutes=parseInt(val)||0;
+  const total=session.reduce((s,i)=>s+(i.minutes||0),0);
+  document.getElementById('total-time').textContent=total+' min total';
+}
+
+function removeSess(idx){
+  session.splice(idx,1);
+  updateBadge();
+  renderSession();
+  renderWarmup();renderSkills();renderGames();renderPhases();
+renderSavedList();
+}
+
+function clearSession(){
+  session=[];updateBadge();
+  document.getElementById('print-area').classList.remove('show');
+  renderSession();renderWarmup();renderSkills();renderGames();renderPhases();
+}
+
+// ─── DRAG & DROP (index-based swap) ──────────────────────────────────────────
+function dragStart(e,idx){
+  dragSrc=idx;
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',idx);
+  setTimeout(()=>{const el=document.getElementById('sbi-'+idx);if(el)el.classList.add('dragging');},0);
+}
+function dragOver(e,idx){
+  e.preventDefault();e.dataTransfer.dropEffect='move';
+  if(idx!==dragSrc){const el=document.getElementById('sbi-'+idx);if(el)el.classList.add('drag-over');}
+}
+function dragLeave(e,idx){
+  const el=document.getElementById('sbi-'+idx);if(el)el.classList.remove('drag-over');
+}
+function dragDrop(e,idx){
+  e.preventDefault();
+  document.querySelectorAll('.sb').forEach(s=>{s.classList.remove('drag-over');s.classList.remove('dragging');});
+  if(dragSrc===null||dragSrc===idx)return;
+  const moved=session.splice(dragSrc,1)[0];
+  session.splice(idx,0,moved);
+  dragSrc=null;
+  renderSession();
+}
+function dragEnd(){
+  document.querySelectorAll('.sb').forEach(s=>{s.classList.remove('drag-over');s.classList.remove('dragging');});
+  dragSrc=null;
+}
+
+// ─── GENERATE PLAN ───────────────────────────────────────────────────────────
+function generatePlan(){
+  const name=document.getElementById('sess-name').value||'Panthers Practice Session';
+  const date=document.getElementById('sess-date').value;
+  const focus=document.getElementById('sess-focus').value;
+  const total=session.reduce((s,i)=>s+(i.minutes||0),0);
+  let out='';
+  out+='═══════════════════════════════════════════════\n';
+  out+='  🐾 PANTHERS SOCCER — SESSION PLAN\n';
+  out+='═══════════════════════════════════════════════\n';
+  out+=`  ${name}\n`;
+  if(date)out+=`  Date: ${date}\n`;
+  if(focus)out+=`  Focus: ${focus}\n`;
+  out+=`  Total time: ${total} minutes\n`;
+  out+='═══════════════════════════════════════════════\n\n';
+  session.forEach((item,idx)=>{
+    const d=getLookup(item.type,item.id);
+    if(!d)return;
+    out+=`─── ${idx+1}. ${d.title.toUpperCase()} [${typeLabel(item.type).toUpperCase()} · ${item.minutes} min] ───\n`;
+    if(item.type==='warmup'){
+      out+=`Players: ${d.players}  Space: ${d.space}\n\nCues:\n`;
+      d.cues.forEach(c=>{out+=`  → ${c}\n`;});
+      out+=`\nSetup: ${d.drill}\n\n`;
+    }else if(item.type==='skill'){
+      out+=`Position: ${posLabel(d.position)} | ${d.phase}\n\nCues:\n`;
+      d.cues.forEach(c=>{out+=`  → ${c}\n`;});
+      out+=`\nDrill: ${d.drill}\n\n`;
+    }else if(item.type==='game'){
+      out+=`Players: ${d.setup.players}  Space: ${d.setup.space}  Goals: ${d.setup.goals}\n\nObjective:\n  ${d.objective}\n\nRules:\n`;
+      d.rules.forEach(r=>{out+=`  ▸ ${r}\n`;});
+      out+=`\nScoring: ${d.scoring}\n\nSkills:\n`;
+      d.skills.forEach(s=>{out+=`  ${s.icon} ${s.name}: ${s.cue}\n`;});
+      out+='\n';
+    }else if(item.type==='phase'){
+      out+=`Players: ${d.setup.players}  Space: ${d.setup.space}\n\nObjective:\n  ${d.objective}\n\nGame Model Principles:\n`;
+      d.principles.forEach(p=>{out+=`  ▸ ${p}\n`;});
+      out+=`\nCoaching Actions:\n`;
+      d.coaching.forEach(c=>{out+=`  ▸ ${c}\n`;});
+      out+='\n';
+    }
+  });
+  out+='═══════════════════════════════════════════════\n';
+  out+='  Panthers Soccer · Nashua South\n';
+  out+='═══════════════════════════════════════════════';
+  document.getElementById('print-content').textContent=out;
+  document.getElementById('print-area').classList.add('show');
+  document.getElementById('print-area').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function copyPlan(){
+  const text=document.getElementById('print-content').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.querySelector('.copy-btn');
+    btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy to clipboard',2000);
+  });
+}
+
+// ─── COACH VIEW ───────────────────────────────────────────────────────────────
+function renderCoachView(){
+  const empty=document.getElementById('cv-empty');
+  const active=document.getElementById('cv-active');
+  if(!session.length){
+    empty.style.display='flex';active.style.display='none';return;
+  }
+  empty.style.display='none';
+  active.style.display='flex';
+  if(cvIdx>=session.length)cvIdx=0;
+  cvRenderCard();
+}
+
+function cvNav(dir){
+  cvIdx=Math.max(0,Math.min(session.length-1,cvIdx+dir));
+  cvRenderCard();
+  document.getElementById('cv-card').scrollTop=0;
+}
+
+function cvRenderCard(){
+  const item=session[cvIdx];
+  const d=getLookup(item.type,item.id);
+  if(!d)return;
+  const total=session.length;
+  const pct=Math.round(((cvIdx+1)/total)*100);
+
+  document.getElementById('cv-bar').style.width=pct+'%';
+  document.getElementById('cv-counter-num').textContent=(cvIdx+1)+' / '+total;
+  document.getElementById('cv-counter-sub').textContent=item.minutes+' min · '+typeLabel(item.type);
+  document.getElementById('cv-prev').disabled=cvIdx===0;
+  document.getElementById('cv-next').disabled=cvIdx===total-1;
+
+  let html='';
+  let ddHtml=''; // deep dive content, built per type
+
+  html+=`<div class="cv-type-badge ${typeCls(item.type)}">${cvTypeIcon(item.type)} ${typeLabel(item.type)}</div>`;
+  html+=`<div class="cv-title">${d.title}</div>`;
+
+  if(item.type==='warmup'){
+    html+=`<div class="cv-meta">
+      <span class="cv-meta-pill time">⏱ ${item.minutes} min</span>
+      <span class="cv-meta-pill">${d.players}</span>
+      <span class="cv-meta-pill">${d.space}</span>
+      <span class="cv-meta-pill">${d.category}</span>
+    </div>`;
+    html+=`<div class="cv-section"><div class="cv-section-label">Coaching cues</div>
+      <ul class="cv-cue-list">${d.cues.map(c=>`<li>${c}</li>`).join('')}</ul>
+    </div>`;
+    html+=`<div class="cv-section"><div class="cv-section-label">Drill</div>
+      <div class="cv-drill-box"><div class="cv-drill-label">Setup &amp; instructions</div><div class="cv-drill-text">${d.drill}</div></div>
+    </div>`;
+    // deep dive: description + full setup detail
+    ddHtml+=`<div class="cv-dd-section"><div class="cv-dd-label">About this activity</div><div class="cv-dd-text">${d.preview}</div></div>`;
+    ddHtml+=`<div class="cv-dd-section"><div class="cv-dd-label">Full setup</div>
+      <div class="cv-dd-grid">
+        <div class="cv-dd-box"><strong>Players</strong><span>${d.players}</span></div>
+        <div class="cv-dd-box"><strong>Space</strong><span>${d.space}</span></div>
+        <div class="cv-dd-box"><strong>Duration</strong><span>${d.duration}</span></div>
+        <div class="cv-dd-box"><strong>Type</strong><span>${d.category}</span></div>
+      </div>
+    </div>`;
+  }
+
+  else if(item.type==='skill'){
+    html+=`<div class="cv-meta">
+      <span class="cv-meta-pill time">⏱ ${item.minutes} min</span>
+      <span class="cv-meta-pill">${posLabel(d.position)}</span>
+      <span class="cv-meta-pill">${d.phase}</span>
+    </div>`;
+    html+=renderDiagram('skill',d.id,'cv');
+    html+=`<div class="cv-section"><div class="cv-section-label">${d.phase}</div>
+      <ul class="cv-cue-list">${d.cues.map(c=>`<li>${c}</li>`).join('')}</ul>
+    </div>`;
+    html+=`<div class="cv-section"><div class="cv-section-label">Drill</div>
+      <div class="cv-drill-box"><div class="cv-drill-label">Instructions</div><div class="cv-drill-text">${d.drill}</div></div>
+    </div>`;
+    // deep dive: description + position context + tags
+    ddHtml+=`<div class="cv-dd-section"><div class="cv-dd-label">Skill overview</div><div class="cv-dd-text">${d.preview}</div></div>`;
+    ddHtml+=`<div class="cv-dd-section"><div class="cv-dd-label">Position context</div>
+      <div class="cv-dd-grid">
+        <div class="cv-dd-box"><strong>Group</strong><span>${posLabel(d.position)}</span></div>
+        <div class="cv-dd-box"><strong>Focus</strong><span>${d.phase}</span></div>
+      </div>
+    </div>`;
+    ddHtml+=`<div class="cv-dd-section"><div class="cv-dd-label">Related skills</div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">${d.tags.map(t=>`<span style="font-size:0.75rem;font-weight:600;padding:0.18rem 0.55rem;border-radius:20px;background:rgba(75,45,140,0.4);border:1px solid rgba(180,160,255,0.3);color:#E8E0FF;">${t}</span>`).join('')}</div>
+    </div>`;
+  }
+
+  else if(item.type==='game'){
+    html+=`<div class="cv-meta">
+      <span class="cv-meta-pill time">⏱ ${item.minutes} min</span>
+      <span class="cv-meta-pill">${d.setup.players}</span>
+      <span class="cv-meta-pill">${d.setup.space}</span>
+      <span class="cv-meta-pill">${d.setup.goals}</span>
+    </div>`;
+    html+=renderDiagram('game',d.id,'cv');
+    html+=`<div class="cv-section"><div class="cv-section-label">Objective</div>
+      <div class="cv-objective">${d.objective}</div>
+    </div>`;
+    html+=`<div class="cv-section"><div class="cv-section-label">Rules</div>
+      <ul class="cv-rules-list">${d.rules.map(r=>`<li>${r}</li>`).join('')}</ul>
+    </div>`;
+    html+=`<div class="cv-section"><div class="cv-section-label">Scoring</div>
+      <div class="cv-score-box">${d.scoring}</div>
+    </div>`;
+    html+=`<div class="cv-section"><div class="cv-section-label">Skills this game trains</div>
+      ${d.skills.map(s=>`<div class="cv-skill-link"><div class="cv-skill-icon">${s.icon}</div><div><div class="cv-skill-name">${s.name}</div><div class="cv-skill-cue">${s.cue}</div></div></div>`).join('')}
+    </div>`;
+    // deep dive: summary + full setup + coaching progressions from scoring
+    ddHtml+=`<div class="cv-dd-section"><div class="cv-dd-label">Game summary</div><div class="cv-dd-text">${d.summary}</div></div>`;
+    ddHtml+=`<div class="cv-dd-section"><div class="cv-dd-label">Full setup</div>
+      <div class="cv-dd-grid">
+        <div class="cv-dd-box"><strong>Players</strong><span>${d.setup.players}</span></div>
+        <div class="cv-dd-box"><strong>Space</strong><span>${d.setup.space}</span></div>
+        <div class="cv-dd-box"><strong>Goals / targets</strong><span>${d.setup.goals}</span></div>
+        <div class="cv-dd-box"><strong>Suggested duration</strong><span>${d.setup.duration}</span></div>
+      </div>
+    </div>`;
+    ddHtml+=`<div class="cv-dd-section"><div class="cv-dd-label">Skill deep dives</div>
+      ${d.skills.map(s=>`<div class="cv-dd-skill"><div class="cv-dd-skill-icon">${s.icon}</div><div><div class="cv-dd-skill-name">${s.name}</div><div class="cv-dd-skill-cue">${s.cue}</div></div></div>`).join('')}
+    </div>`;
+  }
+
+  else if(item.type==='phase'){
+    html+=`<div class="cv-meta">
+      <span class="cv-meta-pill time">⏱ ${item.minutes} min</span>
+      <span class="cv-meta-pill">${d.phase}</span>
+      <span class="cv-meta-pill">${d.setup.players}</span>
+      <span class="cv-meta-pill">${d.setup.space}</span>
+    </div>`;
+    html+=renderDiagram('phase',d.id,'cv');
+    html+=`<div class="cv-section"><div class="cv-section-label">Objective</div>
+      <div class="cv-objective">${d.objective}</div>
+    </div>`;
+    html+=`<div class="cv-section"><div class="cv-section-label">Game model principles</div>
+      <ul class="cv-cue-list">${d.principles.map(p=>`<li>${p}</li>`).join('')}</ul>
+    </div>`;
+    html+=`<div class="cv-section"><div class="cv-section-label">Coaching actions</div>
+      <ul class="cv-rules-list">${d.coaching.map(c=>`<li>${c}</li>`).join('')}</ul>
+    </div>`;
+    html+=`<div class="cv-section"><div class="cv-section-label">Skills reinforced</div>
+      ${d.skills.map(s=>`<div class="cv-skill-link"><div class="cv-skill-icon">${s.icon}</div><div><div class="cv-skill-name">${s.name}</div><div class="cv-skill-cue">${s.cue}</div></div></div>`).join('')}
+    </div>`;
+    // deep dive: summary + full setup + tags
+    ddHtml+=`<div class="cv-dd-section"><div class="cv-dd-label">Activity summary</div><div class="cv-dd-text">${d.summary}</div></div>`;
+    ddHtml+=`<div class="cv-dd-section"><div class="cv-dd-label">Full setup</div>
+      <div class="cv-dd-grid">
+        <div class="cv-dd-box"><strong>Players</strong><span>${d.setup.players}</span></div>
+        <div class="cv-dd-box"><strong>Space</strong><span>${d.setup.space}</span></div>
+        <div class="cv-dd-box"><strong>Goals / targets</strong><span>${d.setup.goals}</span></div>
+        <div class="cv-dd-box"><strong>Duration</strong><span>${d.setup.duration}</span></div>
+      </div>
+    </div>`;
+    ddHtml+=`<div class="cv-dd-section"><div class="cv-dd-label">Skill deep dives</div>
+      ${d.skills.map(s=>`<div class="cv-dd-skill"><div class="cv-dd-skill-icon">${s.icon}</div><div><div class="cv-dd-skill-name">${s.name}</div><div class="cv-dd-skill-cue">${s.cue}</div></div></div>`).join('')}
+    </div>`;
+    ddHtml+=`<div class="cv-dd-section"><div class="cv-dd-label">Phase tags</div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.35rem;">${d.tags.map(t=>`<span style="font-size:0.75rem;font-weight:600;padding:0.18rem 0.55rem;border-radius:20px;background:rgba(75,45,140,0.4);border:1px solid rgba(180,160,255,0.3);color:#E8E0FF;">${t}</span>`).join('')}</div>
+    </div>`;
+  }
+
+  // append deep dive toggle + body
+  html+=`<div class="cv-deepdive-toggle" id="cv-dd-toggle" onclick="toggleDeepDive()">
+    <div class="cv-deepdive-toggle-left">
+      <span style="font-size:1.1rem;">🔍</span>
+      <div>
+        <div class="cv-deepdive-label">Deep Dive</div>
+        <div class="cv-deepdive-sub">Tap to expand full drill detail</div>
+      </div>
+    </div>
+    <span class="cv-deepdive-chevron">▾</span>
+  </div>
+  <div class="cv-deepdive-body" id="cv-dd-body">${ddHtml}</div>`;
+
+  document.getElementById('cv-card').innerHTML=html;
+
+  // swipe support
+  const card=document.getElementById('cv-card');
+  let tx=0;
+  card.ontouchstart=e=>{tx=e.touches[0].clientX;};
+  card.ontouchend=e=>{
+    const dx=e.changedTouches[0].clientX-tx;
+    if(Math.abs(dx)>50){cvNav(dx<0?1:-1);}
+  };
+}
+
+function toggleDeepDive(){
+  const toggle=document.getElementById('cv-dd-toggle');
+  const body=document.getElementById('cv-dd-body');
+  if(!toggle||!body)return;
+  const isOpen=toggle.classList.contains('open');
+  toggle.classList.toggle('open');
+  body.classList.toggle('open');
+  if(!isOpen){
+    // scroll the deep dive into view smoothly after it opens
+    setTimeout(()=>body.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+  }
+}
+
+function cvTypeIcon(t){return{warmup:'🔥',skill:'⚽',game:'🎮',phase:'🗺'}[t]||'';}
+
+
+// ─── PITCH DIAGRAM ENGINE ─────────────────────────────────────────────────────
+// Draws compact SVG pitch diagrams from a spec object.
+// W=280, H=180 canvas. Pitch drawn top=goal being attacked.
+// spec: { type:'half'|'full'|'box'|'channel'|'thirds', zones:[], dots:[], arrows:[], gates:[], labels:[] }
+
+function makeDiagram(spec){
+  if(spec.svg) return spec.svg;
+  const W=280, H=180;
+  const G=14; // grass padding
+  let s='';
+
+  // background
+  s+=`<rect width="${W}" height="${H}" fill="#0d4a1e"/>`;
+
+  // pitch outline
+  const pw=W-G*2, ph=H-G*2;
+  s+=`<rect x="${G}" y="${G}" width="${pw}" height="${ph}" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" rx="2"/>`;
+
+  // grass stripes
+  const sw=pw/6;
+  for(let i=0;i<6;i++){
+    const c=i%2===0?'rgba(255,255,255,0.04)':'rgba(0,0,0,0)';
+    s+=`<rect x="${G+i*sw}" y="${G}" width="${sw}" height="${ph}" fill="${c}"/>`;
+  }
+
+  // type-specific pitch markings
+  const t=spec.type||'half';
+
+  if(t==='full'){
+    // halfway line
+    s+=`<line x1="${G}" y1="${G+ph/2}" x2="${G+pw}" y2="${G+ph/2}" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>`;
+    // centre circle
+    s+=`<circle cx="${G+pw/2}" cy="${G+ph/2}" r="18" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>`;
+    // both penalty areas
+    const paW=pw*0.55, paH=ph*0.22;
+    s+=`<rect x="${G+(pw-paW)/2}" y="${G}" width="${paW}" height="${paH}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>`;
+    s+=`<rect x="${G+(pw-paW)/2}" y="${G+ph-paH}" width="${paW}" height="${paH}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>`;
+    // both goals
+    const gW=pw*0.28;
+    s+=`<rect x="${G+(pw-gW)/2}" y="${G-6}" width="${gW}" height="7" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>`;
+    s+=`<rect x="${G+(pw-gW)/2}" y="${G+ph-1}" width="${gW}" height="7" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>`;
+  }
+
+  if(t==='half'||t==='attacking'){
+    // halfway line at bottom
+    s+=`<line x1="${G}" y1="${G+ph*0.78}" x2="${G+pw}" y2="${G+ph*0.78}" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="4,3"/>`;
+    // penalty area
+    const paW=pw*0.6, paH=ph*0.32;
+    s+=`<rect x="${G+(pw-paW)/2}" y="${G}" width="${paW}" height="${paH}" fill="none" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>`;
+    // goal at top
+    const gW=pw*0.3;
+    s+=`<rect x="${G+(pw-gW)/2}" y="${G-6}" width="${gW}" height="7" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>`;
+    // 6yd box
+    const syW=pw*0.3, syH=ph*0.1;
+    s+=`<rect x="${G+(pw-syW)/2}" y="${G}" width="${syW}" height="${syH}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>`;
+  }
+
+  if(t==='box'){
+    // simple box, goals at both ends
+    const gW=pw*0.4;
+    s+=`<rect x="${G+(pw-gW)/2}" y="${G-6}" width="${gW}" height="7" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>`;
+    s+=`<rect x="${G+(pw-gW)/2}" y="${G+ph-1}" width="${gW}" height="7" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>`;
+  }
+
+  if(t==='channel'){
+    // wide channel — portrait-ish, goal at right end
+    const gH=ph*0.35;
+    s+=`<rect x="${G+pw-1}" y="${G+(ph-gH)/2}" width="7" height="${gH}" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>`;
+  }
+
+  if(t==='thirds'||t==='zones'){
+    // two-zone split with dashed divider
+    s+=`<line x1="${G}" y1="${G+ph*0.5}" x2="${G+pw}" y2="${G+ph*0.5}" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="5,4"/>`;
+    const gW=pw*0.3;
+    s+=`<rect x="${G+(pw-gW)/2}" y="${G-6}" width="${gW}" height="7" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>`;
+  }
+
+  // colored zone overlays
+  (spec.zones||[]).forEach(z=>{
+    s+=`<rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" fill="${z.fill||'rgba(245,197,24,0.08)'}" stroke="${z.stroke||'rgba(245,197,24,0.3)'}" stroke-width="1" stroke-dasharray="3,3" rx="2"/>`;
+    if(z.label) s+=`<text x="${z.x+z.w/2}" y="${z.y+z.h/2+4}" text-anchor="middle" fill="${z.labelColor||'rgba(245,197,24,0.7)'}" font-size="8" font-family="sans-serif" font-weight="700">${z.label}</text>`;
+  });
+
+  // arrows
+  let _ai=0;
+  (spec.arrows||[]).forEach(a=>{
+    const dash=a.dash?'stroke-dasharray="5,3"':'';
+    const uid='m'+Date.now().toString(36)+(_ai++);
+    s+=`<defs><marker id="${uid}" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="${a.color||'rgba(255,255,255,0.7)'}"/></marker></defs>`;
+    s+=`<line x1="${a.x1}" y1="${a.y1}" x2="${a.x2}" y2="${a.y2}" stroke="${a.color||'rgba(255,255,255,0.6)'}" stroke-width="${a.w||1.5}" ${dash} marker-end="url(#${uid})"/>`;
+  });
+
+  // gates (cone pairs)
+  (spec.gates||[]).forEach(g=>{
+    if(g.dir==='h'){
+      s+=`<rect x="${g.x-8}" y="${g.y-2}" width="16" height="4" rx="2" fill="${g.fill||'rgba(245,197,24,0.3)'}" stroke="rgba(245,197,24,0.7)" stroke-width="1"/>`;
+    } else {
+      s+=`<rect x="${g.x-2}" y="${g.y-8}" width="4" height="16" rx="2" fill="${g.fill||'rgba(245,197,24,0.3)'}" stroke="rgba(245,197,24,0.7)" stroke-width="1"/>`;
+    }
+  });
+
+  // player dots
+  (spec.dots||[]).forEach(d=>{
+    const fill=d.team==='def'?'#C83232':d.team==='neu'?'#1D9E75':d.team==='gk'?'#F5C518':'#7B52C2';
+    const stroke=d.team==='def'?'#FF6060':d.team==='neu'?'#5DCAA5':d.team==='gk'?'#FFF':'#B090FF';
+    const r=d.r||6;
+    s+=`<circle cx="${d.x}" cy="${d.y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>`;
+    if(d.label) s+=`<text x="${d.x}" y="${d.y+3.5}" text-anchor="middle" fill="white" font-size="6.5" font-family="sans-serif" font-weight="700">${d.label}</text>`;
+  });
+
+  // text labels
+  (spec.labels||[]).forEach(l=>{
+    s+=`<text x="${l.x}" y="${l.y}" text-anchor="${l.anchor||'middle'}" fill="${l.color||'rgba(255,255,255,0.5)'}" font-size="${l.size||8}" font-family="sans-serif" font-weight="${l.bold?'700':'400'}">${l.text}</text>`;
+  });
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
+}
+
+// Diagram specs keyed by item id
+const diagrams = {
+  // ── SKILLS ──
+  // AM skills
+  1: {svg:'<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"> <rect width="280" height="180" fill="#0d4a1e"/> <rect x="14" y="14" width="42" height="152" fill="rgba(255,255,255,0.03)"/> <rect x="98" y="14" width="42" height="152" fill="rgba(255,255,255,0.03)"/> <rect x="182" y="14" width="42" height="152" fill="rgba(255,255,255,0.03)"/> <rect x="14" y="14" width="252" height="152" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" rx="2"/> <line x1="14" y1="118" x2="266" y2="118" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="4,3"/> <rect x="96" y="44" width="8" height="16" rx="3" fill="rgba(245,197,24,0.4)" stroke="rgba(245,197,24,0.9)" stroke-width="1.5"/> <rect x="176" y="44" width="8" height="16" rx="3" fill="rgba(245,197,24,0.4)" stroke="rgba(245,197,24,0.9)" stroke-width="1.5"/> <text x="140" y="42" text-anchor="middle" fill="rgba(245,197,24,0.8)" font-size="7" font-family="sans-serif" font-weight="700">GATE</text> <line x1="104" y1="52" x2="176" y2="52" stroke="rgba(245,197,24,0.25)" stroke-width="1" stroke-dasharray="2,2"/> <defs> <marker id="wh" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(255,255,255,0.7)"/></marker> <marker id="go" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(245,197,24,0.95)"/></marker> <marker id="gr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(93,202,165,0.9)"/></marker> </defs> <line x1="140" y1="146" x2="140" y2="114" stroke="rgba(255,255,255,0.65)" stroke-width="1.5" marker-end="url(#wh)"/> <line x1="138" y1="114" x2="138" y2="140" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#wh)"/> <path d="M 140,106 C 60,90 60,28 140,54" fill="none" stroke="rgba(93,202,165,0.85)" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#gr)"/> <line x1="140" y1="146" x2="140" y2="60" stroke="rgba(245,197,24,0.9)" stroke-width="2.5" marker-end="url(#go)"/> <line x1="142" y1="146" x2="142" y2="116" stroke="rgba(180,140,255,0.4)" stroke-width="1.5" stroke-dasharray="3,3"/> <circle cx="140" cy="52" r="6" fill="#1D9E75" stroke="#5DCAA5" stroke-width="1.2"/> <text x="140" y="55.5" text-anchor="middle" fill="white" font-size="6.5" font-family="sans-serif" font-weight="700">P2</text> <circle cx="140" cy="108" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="140" y="111.5" text-anchor="middle" fill="white" font-size="6.5" font-family="sans-serif" font-weight="700">P2</text> <circle cx="140" cy="152" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="140" y="155.5" text-anchor="middle" fill="white" font-size="6.5" font-family="sans-serif" font-weight="700">P1</text> <circle cx="202" cy="152" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="220" cy="152" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="238" cy="152" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="140" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6.5" font-family="sans-serif">WALL PASS → SWEEP AROUND GATE → RECEIVE FAR SIDE</text> </svg>'},
+  2: {svg:'<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"> <rect width="280" height="180" fill="#0d4a1e"/> <rect x="14" y="14" width="42" height="152" fill="rgba(255,255,255,0.03)"/> <rect x="98" y="14" width="42" height="152" fill="rgba(255,255,255,0.03)"/> <rect x="182" y="14" width="42" height="152" fill="rgba(255,255,255,0.03)"/> <rect x="14" y="14" width="252" height="152" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" rx="2"/> <defs> <marker id="wh2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(255,255,255,0.7)"/></marker> <marker id="go2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(245,197,24,0.95)"/></marker> <marker id="wd2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(255,255,255,0.5)"/></marker> <marker id="gr2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(93,202,165,0.9)"/></marker> </defs> <line x1="14" y1="90" x2="266" y2="90" stroke="rgba(255,255,255,0.1)" stroke-width="1" stroke-dasharray="3,3"/> <line x1="44" y1="90" x2="100" y2="90" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" marker-end="url(#wh2)"/> <line x1="120" y1="88" x2="190" y2="75" stroke="rgba(245,197,24,0.9)" stroke-width="2.5" marker-end="url(#go2)"/> <line x1="196" y1="76" x2="238" y2="89" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#wd2)"/> <path d="M 118,102 C 118,118 138,118 138,102" fill="none" stroke="rgba(93,202,165,0.75)" stroke-width="1.5" marker-end="url(#gr2)"/> <circle cx="38" cy="90" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="38" y="93.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">SRV</text> <text x="38" y="105" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="6.5" font-family="sans-serif">SERVER</text> <circle cx="108" cy="88" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="108" y="91.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">M1</text> <text x="108" y="103" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="6.5" font-family="sans-serif">RECEIVER</text> <circle cx="128" cy="100" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <text x="128" y="103.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">M2</text> <text x="128" y="118" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="6.5" font-family="sans-serif">SHADOW</text> <circle cx="242" cy="90" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="242" y="93.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">END</text> <text x="242" y="105" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="6.5" font-family="sans-serif">TARGET</text> <text x="155" y="68" text-anchor="middle" fill="rgba(245,197,24,0.6)" font-size="7" font-family="sans-serif" font-weight="700">FIRST TOUCH INTO SPACE</text> <text x="140" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6.5" font-family="sans-serif">ROLL → FIRST TOUCH → PASS → SWAP ROLES → REPEAT</text> </svg>'},
+  3: {type:'half', dots:[{x:50,y:105,team:'att',label:'7'},{x:98,y:112,team:'att',label:'8'},{x:155,y:98,team:'att',label:'10'},{x:230,y:105,team:'att',label:'11'},{x:118,y:128,team:'def'},{x:148,y:120,team:'def'}], arrows:[{id:'a1',x1:98,y1:106,x2:153,y2:100,color:'rgba(255,255,255,0.65)',w:1.5},{id:'a2',x1:153,y1:100,x2:100,y2:88,color:'rgba(245,197,24,0.85)',w:2,dash:true},{id:'a3',x1:96,y1:106,x2:80,y2:72,color:'rgba(245,197,24,0.6)',w:1.5,dash:true}], labels:[{x:140,y:170,text:'8 → 10 WALL PASS → 8 RUNS — 7 & 11 PROVIDE WIDTH',color:'rgba(255,255,255,0.3)',size:6}]},
+  4: {type:'half', dots:[{x:100,y:120,team:'att',label:'AM'},{x:155,y:65,team:'att',label:'9'},{x:130,y:100,team:'def'},{x:160,y:100,team:'def'}], arrows:[{id:'a1',x1:100,y1:120,x2:155,y2:75,color:'rgba(245,197,24,0.8)',w:2,dash:true}], labels:[{x:130,y:145,text:'THROUGH BALL TIMING',color:'rgba(255,255,255,0.35)',size:7}]},
+  5: {type:'half', dots:[{x:140,y:135,team:'att',label:'AM'},{x:85,y:80,team:'att',label:'7'},{x:195,y:80,team:'att',label:'11'},{x:155,y:65,team:'att',label:'9'},{x:120,y:95,team:'def'},{x:150,y:95,team:'def'},{x:135,y:110,team:'def'}], arrows:[{id:'a1',x1:140,y1:135,x2:140,y2:100,color:'rgba(245,197,24,0.8)',w:2.5}]},
+  6: {type:'half', dots:[{x:105,y:120,team:'att',label:'AM'},{x:155,y:65,team:'att',label:'9'},{x:130,y:100,team:'def'},{x:165,y:95,team:'def'}], zones:[{x:75,y:50,w:60,h:100,fill:'rgba(123,82,194,0.15)',stroke:'rgba(123,82,194,0.4)',label:'HALF\nSPACE'}], arrows:[{id:'a1',x1:105,y1:120,x2:100,y2:75,color:'rgba(245,197,24,0.8)',w:2}]},
+  7: {type:'half', dots:[{x:140,y:120,team:'att',label:'AM'},{x:120,y:145,team:'neu',label:'srv'}], arrows:[{id:'a1',x1:120,y1:145,x2:140,y2:120,color:'rgba(255,255,255,0.5)',w:1.5},{id:'a2',x1:140,y1:120,x2:175,y2:55,color:'rgba(245,197,24,0.8)',w:2.5}], labels:[{x:185,y:50,text:'SHOT',color:'rgba(245,197,24,0.6)',size:7,bold:true}]},
+  8: {type:'box', dots:[{x:100,y:105,team:'att'},{x:150,y:90,team:'att'},{x:190,y:115,team:'att'},{x:140,y:130,team:'att'},{x:120,y:75,team:'att'},{x:130,y:105,team:'def'},{x:165,y:110,team:'def'}], arrows:[{id:'a1',x1:100,y1:105,x2:190,y2:115,color:'rgba(245,197,24,0.7)',w:1.5,dash:true}], labels:[{x:140,y:170,text:'LOOK LEFT — PLAY RIGHT',color:'rgba(255,255,255,0.35)',size:7}]},
+  // #9 skills
+  9: {type:'half', dots:[{x:140,y:80,team:'att',label:'9'},{x:140,y:100,team:'def'},{x:100,y:130,team:'att',label:'srv'},{x:180,y:125,team:'att'}], arrows:[{id:'a1',x1:100,y1:130,x2:140,y2:82,color:'rgba(255,255,255,0.5)',w:1.5},{id:'a2',x1:140,y1:80,x2:180,y2:125,color:'rgba(245,197,24,0.8)',w:2,dash:true}], labels:[{x:140,y:170,text:'BACK TO GOAL — HOLD & LAY OFF',color:'rgba(255,255,255,0.35)',size:7}]},
+  10:{type:'half', dots:[{x:140,y:95,team:'att',label:'9'},{x:140,y:115,team:'def'},{x:100,y:140,team:'att',label:'srv'}], arrows:[{id:'a1',x1:140,y1:95,x2:140,y2:135,color:'rgba(245,197,24,0.8)',w:2,dash:true},{id:'a2',x1:100,y1:140,x2:140,y2:97,color:'rgba(255,255,255,0.5)',w:1.5},{id:'a3',x1:140,y1:115,x2:185,y2:60,color:'rgba(245,197,24,0.6)',w:1.5,dash:true}], labels:[{x:140,y:170,text:'DROP → SPIN IN BEHIND',color:'rgba(255,255,255,0.35)',size:7}]},
+  11:{type:'half', dots:[{x:140,y:75,team:'att',label:'9'},{x:125,y:95,team:'def'},{x:155,y:95,team:'def'},{x:55,y:100,team:'neu',label:'W'}], arrows:[{id:'a1',x1:55,y1:100,x2:130,y2:65,color:'rgba(255,255,255,0.5)',w:1.5},{id:'a2',x1:165,y1:120,x2:140,y2:78,color:'rgba(245,197,24,0.8)',w:2,dash:true}], labels:[{x:140,y:170,text:'NEAR POST RUN — ARRIVE LATE',color:'rgba(255,255,255,0.35)',size:7}]},
+  12:{type:'half', dots:[{x:170,y:60,team:'att',label:'9'},{x:130,y:75,team:'def'},{x:55,y:100,team:'neu',label:'W'}], arrows:[{id:'a1',x1:55,y1:100,x2:160,y2:48,color:'rgba(255,255,255,0.5)',w:1.5},{id:'a2',x1:130,y1:110,x2:170,y2:63,color:'rgba(245,197,24,0.8)',w:2,dash:true}], labels:[{x:140,y:170,text:'BACK POST — DELAY & ATTACK',color:'rgba(255,255,255,0.35)',size:7}]},
+  13:{type:'half', dots:[{x:140,y:75,team:'att',label:'9'},{x:140,y:100,team:'gk',label:'GK'}], arrows:[{id:'a1',x1:140,y1:75,x2:140,y2:48,color:'rgba(245,197,24,0.8)',w:2.5}], labels:[{x:140,y:170,text:'SLOW DOWN — PICK YOUR SPOT',color:'rgba(255,255,255,0.35)',size:7}]},
+  14:{type:'half', dots:[{x:140,y:80,team:'att',label:'9'},{x:140,y:100,team:'def'},{x:100,y:115,team:'att',label:'8'},{x:180,y:115,team:'att',label:'10'}], arrows:[{id:'a1',x1:140,y1:80,x2:100,y2:112,color:'rgba(245,197,24,0.8)',w:2,dash:true},{id:'a2',x1:100,y1:112,x2:140,y2:48,color:'rgba(255,255,255,0.6)',w:2}]},
+  // Winger skills
+  15:{type:'channel', dots:[{x:80,y:90,team:'att',label:'W'},{x:170,y:90,team:'def'}], arrows:[{id:'a1',x1:80,y1:90,x2:170,y2:90,color:'rgba(245,197,24,0.8)',w:2},{id:'a2',x1:170,y1:90,x2:245,y2:80,color:'rgba(245,197,24,0.6)',w:1.5,dash:true}], labels:[{x:140,y:170,text:'DRIVE → CUT INSIDE → SHOOT',color:'rgba(255,255,255,0.35)',size:7}]},
+  16:{type:'channel', dots:[{x:80,y:90,team:'att',label:'W'},{x:160,y:90,team:'def'}], arrows:[{id:'a1',x1:80,y1:90,x2:250,y2:90,color:'rgba(245,197,24,0.8)',w:2},{id:'a2',x1:250,y1:90,x2:270,y2:55,color:'rgba(255,255,255,0.5)',w:1.5,dash:true}], labels:[{x:140,y:170,text:'BURST OUTSIDE — DELIVER',color:'rgba(255,255,255,0.35)',size:7}]},
+  17:{type:'half', dots:[{x:55,y:100,team:'att',label:'W'},{x:140,y:70,team:'att',label:'9'},{x:185,y:95,team:'att',label:'AM'},{x:130,y:90,team:'def'},{x:160,y:90,team:'def'}], arrows:[{id:'a1',x1:55,y1:100,x2:110,y2:60,color:'rgba(245,197,24,0.8)',w:2.5}], labels:[{x:140,y:170,text:'2-TOUCH MAX — DRIVE CROSS IN',color:'rgba(255,255,255,0.35)',size:7}]},
+  18:{type:'half', dots:[{x:55,y:100,team:'att',label:'W'},{x:65,y:85,team:'def',label:'FB'}], arrows:[{id:'a1',x1:55,y1:100,x2:75,y2:115,color:'rgba(245,197,24,0.8)',w:2},{id:'a2',x1:75,y1:115,x2:50,y2:95,color:'rgba(255,255,255,0.5)',w:1.5,dash:true}], labels:[{x:140,y:55,text:'FAKE INSIDE → SHOW WIDE',color:'rgba(255,255,255,0.4)',size:7}]},
+  19:{type:'half', dots:[{x:55,y:115,team:'att',label:'W'},{x:70,y:95,team:'def'}], arrows:[{id:'a1',x1:55,y1:115,x2:55,y2:55,color:'rgba(245,197,24,0.8)',w:2.5}], zones:[{x:30,y:30,w:50,h:120,fill:'rgba(15,110,86,0.12)',stroke:'rgba(93,202,165,0.3)',label:'CHANNEL'}], labels:[{x:140,y:170,text:'RECEIVE FORWARD — DRIVE',color:'rgba(255,255,255,0.35)',size:7}]},
+  // Universal skills
+  20:{type:'box', dots:[{x:90,y:100,team:'att'},{x:140,y:110,team:'att'},{x:190,y:100,team:'att'},{x:115,y:75,team:'def'},{x:165,y:75,team:'def'}], arrows:[{id:'a1',x1:90,y1:100,x2:140,y2:110,color:'rgba(255,255,255,0.5)',w:1.5}], labels:[{x:140,y:55,text:'SCAN BEFORE BALL ARRIVES',color:'rgba(245,197,24,0.5)',size:7,bold:true}]},
+  21:{type:'half', dots:[{x:100,y:130,team:'att'},{x:130,y:110,team:'def'}], arrows:[{id:'a1',x1:100,y1:130,x2:190,y2:75,color:'rgba(245,197,24,0.8)',w:2.5}], gates:[{x:200,y:70,dir:'v'}], labels:[{x:140,y:170,text:'FIRST TOUCH → BURST THROUGH GATE',color:'rgba(255,255,255,0.35)',size:7}]},
+  22:{type:'box', dots:[{x:130,y:100,team:'att'},{x:145,y:100,team:'def'}], arrows:[{id:'a1',x1:130,y1:100,x2:175,y2:80,color:'rgba(245,197,24,0.8)',w:2,dash:true}], labels:[{x:140,y:60,text:'HIPS OPEN — NEVER SQUARE',color:'rgba(245,197,24,0.5)',size:7,bold:true}]},
+  23:{type:'box', dots:[{x:130,y:95,team:'att'},{x:150,y:100,team:'def'}], arrows:[{id:'a1',x1:130,y1:95,x2:195,y2:75,color:'rgba(245,197,24,0.8)',w:2.5,dash:true}], labels:[{x:140,y:60,text:'SHIELD → TURN → GO',color:'rgba(245,197,24,0.5)',size:7,bold:true}]},
+  24:{type:'half', dots:[{x:140,y:80,team:'att'},{x:140,y:100,team:'def'},{x:140,y:115,team:'gk',label:'GK'}], arrows:[{id:'a1',x1:140,y1:80,x2:200,y2:50,color:'rgba(245,197,24,0.8)',w:2.5}], labels:[{x:140,y:170,text:'PLACEMENT > POWER',color:'rgba(255,255,255,0.35)',size:7}]},
+  25:{type:'box', dots:[{x:90,y:100,team:'att'},{x:150,y:85,team:'att'},{x:200,y:105,team:'att'},{x:120,y:130,team:'att'},{x:130,y:105,team:'def'},{x:165,y:110,team:'def'}], arrows:[{id:'a1',x1:90,y1:100,x2:150,y2:85,color:'rgba(255,255,255,0.5)',w:1.5},{id:'a2',x1:150,y1:85,x2:200,y2:105,color:'rgba(245,197,24,0.7)',w:1.5},{id:'a3',x1:200,y1:105,x2:120,y2:128,color:'rgba(245,197,24,0.5)',w:1.5,dash:true}]},
+  // Backs
+  26:{type:'channel', dots:[{x:100,y:90,team:'att',label:'W'},{x:155,y:90,team:'def',label:'BK'}], arrows:[{id:'a1',x1:100,y1:90,x2:140,y2:90,color:'rgba(245,197,24,0.8)',w:2}], labels:[{x:140,y:170,text:'JOCKEY — SHOW OUTSIDE',color:'rgba(255,255,255,0.35)',size:7}]},
+  27:{type:'channel', dots:[{x:80,y:90,team:'att',label:'W'},{x:155,y:90,team:'def',label:'BK'}], arrows:[{id:'a1',x1:80,y1:90,x2:115,y2:90,color:'rgba(245,197,24,0.8)',w:2},{id:'a2',x1:155,y1:90,x2:115,y2:90,color:'#C83232',w:2.5}], labels:[{x:140,y:170,text:'WAIT — THEN COMMIT LOW',color:'rgba(255,255,255,0.35)',size:7}]},
+  28:{type:'half', dots:[{x:155,y:75,team:'att',label:'ATT'},{x:140,y:95,team:'def',label:'BK'}], arrows:[{id:'a1',x1:155,y1:75,x2:185,y2:50,color:'rgba(245,197,24,0.7)',w:1.5},{id:'a2',x1:140,y1:95,x2:165,y2:68,color:'#C83232',w:2.5}], labels:[{x:140,y:170,text:'SLIDE — WIN CLEAN',color:'rgba(255,255,255,0.35)',size:7}]},
+  29:{type:'half', dots:[{x:90,y:130,team:'def',label:'BK'},{x:90,y:100,team:'att'}], arrows:[{id:'a1',x1:90,y1:130,x2:90,y2:104,color:'#C83232',w:2.5}], labels:[{x:140,y:55,text:'TRIGGER → STEP FAST',color:'rgba(245,197,24,0.5)',size:7,bold:true}]},
+  30:{type:'half', dots:[{x:140,y:60,team:'def',label:'BK'},{x:140,y:75,team:'att',label:'ATT'},{x:55,y:100,team:'neu',label:'SRV'}], arrows:[{id:'a1',x1:55,y1:100,x2:140,y2:62,color:'rgba(255,255,255,0.4)',w:1.5},{id:'a2',x1:140,y1:60,x2:50,y2:30,color:'#C83232',w:2.5}], labels:[{x:140,y:170,text:'ATTACK BALL — CLEAR WIDE',color:'rgba(255,255,255,0.35)',size:7}]},
+  31:{type:'half', dots:[{x:90,y:140,team:'gk',label:'GK'},{x:90,y:110,team:'def',label:'BK'},{x:130,y:100,team:'att'},{x:180,y:90,team:'att',label:'MID'}], arrows:[{id:'a1',x1:90,y1:140,x2:90,y2:112,color:'rgba(255,255,255,0.4)',w:1.5},{id:'a2',x1:90,y1:110,x2:178,y2:92,color:'rgba(245,197,24,0.8)',w:2}], labels:[{x:140,y:170,text:'OPEN BODY — PLAY FORWARD',color:'rgba(255,255,255,0.35)',size:7}]},
+  32:{type:'half', dots:[{x:155,y:75,team:'att',label:'ATT'},{x:120,y:100,team:'def',label:'BK'},{x:165,y:100,team:'def',label:'CB'}], arrows:[{id:'a1',x1:120,y1:100,x2:158,y2:78,color:'#C83232',w:2.5,dash:true}], labels:[{x:140,y:170,text:'GOAL-SIDE FIRST — DIAGONAL RUN',color:'rgba(255,255,255,0.35)',size:7}]},
+  // DM skills
+  33:{type:'box', dots:[{x:90,y:95,team:'att'},{x:160,y:80,team:'att'},{x:210,y:95,team:'att'},{x:125,y:120,team:'def',label:'DM'},{x:175,y:120,team:'def'}], arrows:[{id:'a1',x1:90,y1:95,x2:155,y2:82,color:'rgba(255,255,255,0.4)',w:1.5,dash:true},{id:'a2',x1:125,y1:120,x2:145,y2:85,color:'#C83232',w:2.5}], labels:[{x:140,y:165,text:'READ EYES — STEP LATE & FAST',color:'rgba(255,255,255,0.35)',size:7}]},
+  34:{type:'box', dots:[{x:90,y:90,team:'att'},{x:175,y:90,team:'att'},{x:125,y:125,team:'def',label:'DM'}], arrows:[{id:'a1',x1:90,y1:90,x2:170,y2:90,color:'rgba(255,255,255,0.3)',w:1.5,dash:true},{id:'a2',x1:125,y1:125,x2:130,y2:92,color:'#C83232',w:2.5}], labels:[{x:140,y:60,text:'ATTACK SPACE BETWEEN PLAYERS',color:'rgba(245,197,24,0.5)',size:7,bold:true}]},
+  35:{type:'half', dots:[{x:140,y:75,team:'att',label:'9'},{x:140,y:105,team:'def',label:'DM'},{x:100,y:135,team:'att'},{x:180,y:130,team:'att'}], arrows:[{id:'a1',x1:100,y1:135,x2:138,y2:107,color:'rgba(255,255,255,0.3)',w:1.5,dash:true}], labels:[{x:140,y:170,text:'BLOCK THE LANE INTO #9',color:'rgba(255,255,255,0.35)',size:7}]},
+  36:{type:'half', dots:[{x:140,y:105,team:'def',label:'DM'},{x:100,y:135,team:'att'},{x:185,y:125,team:'att'},{x:115,y:90,team:'att'}], arrows:[{id:'a1',x1:100,y1:135,x2:140,y2:107,color:'rgba(255,255,255,0.4)',w:1.5},{id:'a2',x1:140,y1:105,x2:185,y2:127,color:'rgba(245,197,24,0.7)',w:2}], labels:[{x:140,y:170,text:'SIDEWAYS-ON — RECYCLE QUICK',color:'rgba(255,255,255,0.35)',size:7}]},
+  37:{type:'half', dots:[{x:105,y:105,team:'def',label:'DM'},{x:80,y:135,team:'gk',label:'GK'},{x:95,y:120,team:'att'}], arrows:[{id:'a1',x1:105,y1:105,x2:95,y2:122,color:'#C83232',w:2.5}], labels:[{x:160,y:60,text:'TRIGGER → PRESS NOW',color:'rgba(245,197,24,0.5)',size:7,bold:true}]},
+  38:{type:'half', dots:[{x:120,y:105,team:'def',label:'DM'},{x:90,y:130,team:'att'},{x:160,y:80,team:'att',label:'9'}], arrows:[{id:'a1',x1:90,y1:130,x2:88,y2:128,color:'rgba(255,255,255,0.3)',w:1.5,dash:true}], labels:[{x:140,y:170,text:'BODY BETWEEN BALL AND 9',color:'rgba(255,255,255,0.35)',size:7}]},
+
+  // ── GAMES ──
+  g1:{svg:'<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"> <rect width="280" height="180" fill="#0d4a1e"/> <rect x="14" y="14" width="252" height="152" fill="rgba(255,255,255,0.02)"/> <defs> <marker id="wg1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(255,255,255,0.65)"/></marker> <marker id="gg1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(245,197,24,0.95)"/></marker> <marker id="rg1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(240,100,80,0.9)"/></marker> </defs> <rect x="95" y="20" width="90" height="140" fill="rgba(15,100,50,0.35)" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" rx="2"/> <rect x="95" y="20" width="90" height="20" fill="rgba(255,255,255,0.04)"/> <rect x="95" y="140" width="90" height="20" fill="rgba(255,255,255,0.04)"/> <rect x="116" y="14" width="48" height="10" rx="2" fill="rgba(245,197,24,0.2)" stroke="rgba(245,197,24,0.9)" stroke-width="1.5"/> <text x="140" y="12" text-anchor="middle" fill="rgba(245,197,24,0.85)" font-size="6.5" font-family="sans-serif" font-weight="700">END GATE (OFF)</text> <rect x="83" y="78" width="14" height="26" rx="2" fill="rgba(240,100,80,0.2)" stroke="rgba(240,100,80,0.8)" stroke-width="1.5"/> <text x="76" y="93" text-anchor="middle" fill="rgba(240,100,80,0.8)" font-size="6" font-family="sans-serif" font-weight="700" transform="rotate(-90,76,93)">SIDE</text> <rect x="183" y="78" width="14" height="26" rx="2" fill="rgba(240,100,80,0.2)" stroke="rgba(240,100,80,0.8)" stroke-width="1.5"/> <text x="204" y="93" text-anchor="middle" fill="rgba(240,100,80,0.8)" font-size="6" font-family="sans-serif" font-weight="700" transform="rotate(90,204,93)">SIDE</text> <line x1="95" y1="91" x2="108" y2="91" stroke="rgba(240,100,80,0.3)" stroke-width="1" stroke-dasharray="2,2"/> <line x1="172" y1="91" x2="185" y2="91" stroke="rgba(240,100,80,0.3)" stroke-width="1" stroke-dasharray="2,2"/> <circle cx="118" cy="130" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="118" y="133.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">A</text> <circle cx="140" cy="140" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="140" y="143.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">A</text> <circle cx="162" cy="130" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="162" y="133.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">A</text> <circle cx="140" cy="115" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="140" y="118.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">A</text> <circle cx="118" cy="80" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <text x="118" y="83.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">D</text> <circle cx="140" cy="68" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <text x="140" y="71.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">D</text> <circle cx="162" cy="80" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <text x="162" y="83.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">D</text> <line x1="140" y1="109" x2="140" y2="80" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" marker-end="url(#wg1)"/> <line x1="140" y1="62" x2="140" y2="26" stroke="rgba(245,197,24,0.9)" stroke-width="2" marker-end="url(#gg1)"/> <line x1="118" y1="74" x2="90" y2="91" stroke="rgba(240,100,80,0.7)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#rg1)"/> <text x="140" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6.5" font-family="sans-serif">OFF: ATTACK END GATE · DEF: WIN IT, SCORE SIDE GATES</text> </svg>'},
+  g3:{svg:'<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"> <rect width="280" height="180" fill="#0d4a1e"/> <rect x="14" y="14" width="252" height="152" fill="rgba(15,100,50,0.3)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" rx="2"/> <rect x="80" y="14" width="120" height="45" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/> <rect x="105" y="8" width="70" height="8" rx="1" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/> <line x1="14" y1="100" x2="266" y2="100" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="4,3"/> <rect x="14" y="14" width="38" height="152" fill="rgba(93,202,165,0.07)" stroke="rgba(93,202,165,0.3)" stroke-width="1" stroke-dasharray="3,3"/> <rect x="228" y="14" width="38" height="152" fill="rgba(93,202,165,0.07)" stroke="rgba(93,202,165,0.3)" stroke-width="1" stroke-dasharray="3,3"/> <text x="33" y="93" text-anchor="middle" fill="rgba(93,202,165,0.7)" font-size="6.5" font-family="sans-serif" font-weight="700" transform="rotate(-90,33,93)">WIDE CH</text> <text x="247" y="93" text-anchor="middle" fill="rgba(93,202,165,0.7)" font-size="6.5" font-family="sans-serif" font-weight="700" transform="rotate(90,247,93)">WIDE CH</text> <rect x="14" y="55" width="38" height="36" fill="rgba(245,197,24,0.12)" stroke="rgba(245,197,24,0.7)" stroke-width="1.5" rx="2"/> <text x="33" y="76" text-anchor="middle" fill="rgba(245,197,24,0.8)" font-size="6" font-family="sans-serif" font-weight="700">CLR</text> <text x="33" y="84" text-anchor="middle" fill="rgba(245,197,24,0.8)" font-size="6" font-family="sans-serif" font-weight="700">BOX</text> <rect x="228" y="55" width="38" height="36" fill="rgba(245,197,24,0.12)" stroke="rgba(245,197,24,0.7)" stroke-width="1.5" rx="2"/> <text x="247" y="76" text-anchor="middle" fill="rgba(245,197,24,0.8)" font-size="6" font-family="sans-serif" font-weight="700">CLR</text> <text x="247" y="84" text-anchor="middle" fill="rgba(245,197,24,0.8)" font-size="6" font-family="sans-serif" font-weight="700">BOX</text> <defs> <marker id="wg3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(255,255,255,0.65)"/></marker> <marker id="gg3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(245,197,24,0.95)"/></marker> <marker id="rg3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(240,100,80,0.9)"/></marker> <marker id="cg3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(93,202,165,0.9)"/></marker> </defs> <line x1="33" y1="108" x2="100" y2="58" stroke="rgba(93,202,165,0.75)" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#cg3)"/> <line x1="120" y1="108" x2="113" y2="38" stroke="rgba(245,197,24,0.8)" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#gg3)"/> <line x1="155" y1="115" x2="40" y2="72" stroke="rgba(240,100,80,0.7)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#rg3)"/> <circle cx="140" cy="20" r="5" fill="#F5C518" stroke="white" stroke-width="1.2"/> <text x="140" y="23.5" text-anchor="middle" fill="#1A0F35" font-size="5.5" font-family="sans-serif" font-weight="700">GK</text> <circle cx="33" cy="110" r="6" fill="#1D9E75" stroke="#5DCAA5" stroke-width="1.2"/> <text x="33" y="113.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">W</text> <circle cx="247" cy="110" r="6" fill="#1D9E75" stroke="#5DCAA5" stroke-width="1.2"/> <text x="247" y="113.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">W</text> <circle cx="115" cy="110" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="115" y="113.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">A</text> <circle cx="155" cy="105" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="155" y="108.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">A</text> <circle cx="125" cy="130" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <text x="125" y="133.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">D</text> <circle cx="158" cy="125" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <text x="158" y="128.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">D</text> <circle cx="105" cy="158" r="5" fill="#7B52C2" stroke="#B090FF" stroke-width="1" opacity="0.6"/> <circle cx="120" cy="158" r="5" fill="#7B52C2" stroke="#B090FF" stroke-width="1" opacity="0.6"/> <text x="112" y="172" text-anchor="middle" fill="rgba(255,255,255,0.35)" font-size="6" font-family="sans-serif">NEXT</text> <text x="140" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6" font-family="sans-serif">CROSS → FINISH · CLR TO BOX = 1PT · NEXT LINE SHOOTS ON CLEAR</text> </svg>'},
+  g4:{svg:'<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"> <rect width="280" height="180" fill="#0d4a1e"/> <rect x="14" y="14" width="252" height="152" fill="rgba(15,100,50,0.3)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" rx="2"/> <rect x="80" y="14" width="120" height="38" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/> <rect x="108" y="8" width="64" height="8" rx="1" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/> <line x1="14" y1="128" x2="266" y2="128" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-dasharray="5,4"/> <text x="268" y="131" fill="rgba(255,255,255,0.4)" font-size="6" font-family="sans-serif">MID</text> <defs> <marker id="wg4" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(255,255,255,0.65)"/></marker> <marker id="gg4" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(245,197,24,0.9)"/></marker> <marker id="rg4" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(240,100,80,0.9)"/></marker> </defs> <circle cx="140" cy="19" r="5" fill="#F5C518" stroke="white" stroke-width="1.2"/> <text x="140" y="22.5" text-anchor="middle" fill="#1A0F35" font-size="5.5" font-family="sans-serif" font-weight="700">GK</text> <circle cx="75" cy="75" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="75" y="78.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">LB</text> <circle cx="115" cy="72" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="115" y="75.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">CB</text> <circle cx="165" cy="72" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="165" y="75.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">CB</text> <circle cx="205" cy="75" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="205" y="78.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">RB</text> <circle cx="95" cy="105" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <text x="95" y="108.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">R</text> <circle cx="140" cy="100" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <text x="140" y="103.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">R</text> <circle cx="185" cy="105" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <text x="185" y="108.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">R</text> <circle cx="95" cy="133" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="95" y="136.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">M</text> <circle cx="140" cy="133" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="140" y="136.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">M</text> <circle cx="185" cy="133" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="185" y="136.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">M</text> <circle cx="50" cy="162" r="5" fill="#7B52C2" stroke="#B090FF" stroke-width="1" opacity="0.5"/> <circle cx="65" cy="162" r="5" fill="#7B52C2" stroke="#B090FF" stroke-width="1" opacity="0.5"/> <text x="57" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6" font-family="sans-serif">DEF SUBS</text> <circle cx="215" cy="162" r="5" fill="#C83232" stroke="#FF6060" stroke-width="1" opacity="0.5"/> <circle cx="230" cy="162" r="5" fill="#C83232" stroke="#FF6060" stroke-width="1" opacity="0.5"/> <text x="222" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6" font-family="sans-serif">PRESS SUBS</text> <line x1="140" y1="127" x2="140" y2="80" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" marker-end="url(#wg4)"/> <line x1="95" y1="99" x2="95" y2="82" stroke="rgba(240,100,80,0.85)" stroke-width="2" marker-end="url(#rg4)"/> <line x1="115" y1="66" x2="140" y2="27" stroke="rgba(245,197,24,0.75)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#gg4)"/> <text x="140" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6.5" font-family="sans-serif">READ TRIGGER → PRESS OR RECOVER → BUILD TO MID</text> </svg>'},
+  g5:{svg:'<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"> <rect width="280" height="180" fill="#0d4a1e"/> <rect x="22" y="22" width="236" height="136" fill="rgba(15,100,50,0.35)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" rx="2"/> <line x1="140" y1="22" x2="140" y2="158" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="4,3"/> <circle cx="140" cy="90" r="10" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/> <rect x="14" y="62" width="10" height="56" rx="1" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/> <rect x="256" y="62" width="10" height="56" rx="1" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/> <circle cx="55" cy="18" r="4" fill="rgba(100,180,255,0.8)" stroke="rgba(150,210,255,0.9)" stroke-width="1"/> <circle cx="110" cy="18" r="4" fill="rgba(100,180,255,0.8)" stroke="rgba(150,210,255,0.9)" stroke-width="1"/> <circle cx="170" cy="18" r="4" fill="rgba(100,180,255,0.8)" stroke="rgba(150,210,255,0.9)" stroke-width="1"/> <circle cx="225" cy="18" r="4" fill="rgba(100,180,255,0.8)" stroke="rgba(150,210,255,0.9)" stroke-width="1"/> <circle cx="55" cy="162" r="4" fill="rgba(100,180,255,0.8)" stroke="rgba(150,210,255,0.9)" stroke-width="1"/> <circle cx="110" cy="162" r="4" fill="rgba(100,180,255,0.8)" stroke="rgba(150,210,255,0.9)" stroke-width="1"/> <circle cx="170" cy="162" r="4" fill="rgba(100,180,255,0.8)" stroke="rgba(150,210,255,0.9)" stroke-width="1"/> <circle cx="225" cy="162" r="4" fill="rgba(100,180,255,0.8)" stroke="rgba(150,210,255,0.9)" stroke-width="1"/> <circle cx="19" cy="90" r="5" fill="#F5C518" stroke="white" stroke-width="1.2"/> <text x="19" y="93.5" text-anchor="middle" fill="#1A0F35" font-size="5" font-family="sans-serif" font-weight="700">GK</text> <circle cx="261" cy="90" r="5" fill="#F5C518" stroke="white" stroke-width="1.2"/> <text x="261" y="93.5" text-anchor="middle" fill="#1A0F35" font-size="5" font-family="sans-serif" font-weight="700">GK</text> <circle cx="8" cy="140" r="3.5" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/> <circle cx="8" cy="150" r="3.5" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/> <circle cx="272" cy="46" r="3.5" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/> <circle cx="272" cy="38" r="3.5" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/> <defs> <marker id="wg5" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="rgba(255,255,255,0.7)"/></marker> <marker id="bg5" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="rgba(30,30,30,0.9)"/></marker> <marker id="dg5" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="rgba(200,50,50,0.8)"/></marker> </defs> <circle cx="75" cy="70" r="6" fill="#1a1a1a" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/> <circle cx="105" cy="90" r="6" fill="#1a1a1a" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/> <circle cx="75" cy="112" r="6" fill="#1a1a1a" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/> <circle cx="55" cy="90" r="6" fill="#1a1a1a" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/> <circle cx="170" cy="70" r="6" fill="#C83232" stroke="#FF8080" stroke-width="1.2"/> <circle cx="175" cy="90" r="6" fill="#C83232" stroke="#FF8080" stroke-width="1.2"/> <circle cx="170" cy="112" r="6" fill="#C83232" stroke="#FF8080" stroke-width="1.2"/> <circle cx="210" cy="90" r="6" fill="#C83232" stroke="#FF8080" stroke-width="1.2"/> <circle cx="140" cy="90" r="4" fill="white" stroke="rgba(200,200,200,0.8)" stroke-width="1"/> <line x1="144" y1="90" x2="168" y2="90" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" marker-end="url(#wg5)"/> <line x1="171" y1="84" x2="171" y2="76" stroke="rgba(200,50,50,0.7)" stroke-width="1.5" stroke-dasharray="3,2" marker-end="url(#dg5)"/> <line x1="104" y1="85" x2="80" y2="73" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" marker-end="url(#wg5)"/> <circle cx="100" cy="18" r="3" fill="#1a1a1a" stroke="rgba(255,255,255,0.5)" stroke-width="1" opacity="0.6"/> <circle cx="115" cy="18" r="3" fill="#1a1a1a" stroke="rgba(255,255,255,0.5)" stroke-width="1" opacity="0.6"/> <circle cx="165" cy="162" r="3" fill="#C83232" stroke="#FF8080" stroke-width="1" opacity="0.6"/> <circle cx="180" cy="162" r="3" fill="#C83232" stroke="#FF8080" stroke-width="1" opacity="0.6"/> <text x="107" y="12" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="5.5" font-family="sans-serif">WAITING</text> <text x="172" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="5.5" font-family="sans-serif">WAITING</text> <text x="140" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6.5" font-family="sans-serif">3-1 SHAPE · 3 MIN GAMES · TRACK RECORD · ROTATE LOSERS</text> </svg>'},
+  g6:{svg:'<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"> <rect width="280" height="180" fill="#0d4a1e"/> <rect x="14" y="14" width="252" height="152" fill="rgba(15,100,50,0.3)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" rx="2"/> <rect x="80" y="14" width="120" height="38" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/> <rect x="108" y="8" width="64" height="8" rx="1" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/> <line x1="14" y1="94" x2="266" y2="94" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-dasharray="5,4"/> <rect x="14" y="14" width="252" height="80" fill="rgba(93,202,165,0.07)" stroke="none"/> <text x="140" y="34" text-anchor="middle" fill="rgba(93,202,165,0.65)" font-size="7" font-family="sans-serif" font-weight="700">SCORING ZONE</text> <rect x="14" y="94" width="252" height="72" fill="rgba(75,45,140,0.1)" stroke="none"/> <text x="140" y="162" text-anchor="middle" fill="rgba(180,140,255,0.55)" font-size="7" font-family="sans-serif" font-weight="700">BUILD ZONE — ALL PLAYERS START HERE</text> <rect x="20" y="50" width="20" height="16" rx="2" fill="rgba(240,100,80,0.15)" stroke="rgba(240,100,80,0.5)" stroke-width="1" stroke-dasharray="2,2"/> <rect x="240" y="50" width="20" height="16" rx="2" fill="rgba(240,100,80,0.15)" stroke="rgba(240,100,80,0.5)" stroke-width="1" stroke-dasharray="2,2"/> <text x="30" y="62" text-anchor="middle" fill="rgba(240,100,80,0.6)" font-size="5.5" font-family="sans-serif">MINI</text> <text x="250" y="62" text-anchor="middle" fill="rgba(240,100,80,0.6)" font-size="5.5" font-family="sans-serif">MINI</text> <defs> <marker id="wg6" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(245,197,24,0.95)"/></marker> <marker id="rg6" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(240,100,80,0.9)"/></marker> </defs> <circle cx="140" cy="19" r="5" fill="#F5C518" stroke="white" stroke-width="1.2"/> <text x="140" y="22.5" text-anchor="middle" fill="#1A0F35" font-size="5.5" font-family="sans-serif" font-weight="700">GK</text> <circle cx="75" cy="128" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="140" cy="120" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="205" cy="128" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="105" cy="148" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="175" cy="148" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="105" cy="103" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="140" cy="98" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="175" cy="103" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <line x1="140" y1="114" x2="140" y2="96" stroke="rgba(245,197,24,0.9)" stroke-width="2.5" marker-end="url(#wg6)"/> <line x1="105" y1="97" x2="32" y2="62" stroke="rgba(240,100,80,0.65)" stroke-width="1.5" stroke-dasharray="3,3" marker-end="url(#rg6)"/> <text x="140" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6.5" font-family="sans-serif">BUILD THROUGH THE BLOCK → BREAK INTO SCORING ZONE → FINISH</text> </svg>'},
+  g8:{type:'full', dots:[{x:80,y:50,team:'att'},{x:140,y:45,team:'att'},{x:200,y:50,team:'att'},{x:120,y:65,team:'att'},{x:80,y:120,team:'def'},{x:140,y:125,team:'def'},{x:200,y:120,team:'def'},{x:150,y:110,team:'def'},{x:140,y:25,team:'gk',label:'GK'},{x:140,y:155,team:'gk',label:'GK'}], arrows:[{id:'a1',x1:80,y1:120,x2:80,y2:65,color:'#C83232',w:2,dash:true}]},
+  g9:{svg:'<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"> <rect width="280" height="180" fill="#0d4a1e"/> <rect x="14" y="14" width="252" height="152" fill="rgba(15,100,50,0.3)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" rx="2"/> <rect x="80" y="14" width="120" height="38" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/> <rect x="108" y="8" width="64" height="8" rx="1" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/> <line x1="14" y1="118" x2="266" y2="118" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" stroke-dasharray="5,4"/> <text x="270" y="121" fill="rgba(255,255,255,0.3)" font-size="5.5" font-family="sans-serif">MID</text> <rect x="14" y="82" width="20" height="14" rx="2" fill="rgba(240,100,80,0.15)" stroke="rgba(240,100,80,0.45)" stroke-width="1" stroke-dasharray="2,2"/> <rect x="246" y="82" width="20" height="14" rx="2" fill="rgba(240,100,80,0.15)" stroke="rgba(240,100,80,0.45)" stroke-width="1" stroke-dasharray="2,2"/> <text x="24" y="92" text-anchor="middle" fill="rgba(240,100,80,0.55)" font-size="5" font-family="sans-serif">MINI</text> <text x="256" y="92" text-anchor="middle" fill="rgba(240,100,80,0.55)" font-size="5" font-family="sans-serif">MINI</text> <defs> <marker id="wg9" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(255,255,255,0.6)"/></marker> <marker id="gg9" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(245,197,24,0.95)"/></marker> </defs> <circle cx="140" cy="19" r="5" fill="#F5C518" stroke="white" stroke-width="1.2"/> <text x="140" y="22.5" text-anchor="middle" fill="#1A0F35" font-size="5.5" font-family="sans-serif" font-weight="700">GK</text> <circle cx="55" cy="100" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="55" y="103.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">7</text> <circle cx="100" cy="108" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="100" y="111.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">8</text> <circle cx="140" cy="112" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="140" y="115.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">10</text> <circle cx="180" cy="108" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="180" y="111.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">9</text> <circle cx="225" cy="100" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="225" y="103.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">11</text> <circle cx="110" cy="78" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="145" cy="68" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="175" cy="75" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="140" cy="55" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="105" cy="142" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2" opacity="0.7"/> <text x="105" y="145.5" text-anchor="middle" fill="white" font-size="5.5" font-family="sans-serif" font-weight="700">H</text> <circle cx="175" cy="142" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2" opacity="0.7"/> <text x="175" y="145.5" text-anchor="middle" fill="white" font-size="5.5" font-family="sans-serif" font-weight="700">H</text> <text x="140" y="158" text-anchor="middle" fill="rgba(180,140,255,0.5)" font-size="6" font-family="sans-serif" font-weight="600">HOLDING — CANNOT CROSS MID LINE</text> <line x1="100" y1="102" x2="138" y2="112" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" marker-end="url(#wg9)"/> <line x1="140" y1="106" x2="140" y2="62" stroke="rgba(245,197,24,0.85)" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#gg9)"/> <text x="140" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6.5" font-family="sans-serif">3 PASSES MIN → COMBINE → FINISH · HOLDING PLAYERS RECYCLE ONLY</text> </svg>'},
+  g10:{type:'half', dots:[{x:140,y:80,team:'att',label:'9'},{x:140,y:100,team:'def'},{x:100,y:125,team:'att',label:'AM'},{x:185,y:120,team:'att',label:'AM'},{x:165,y:100,team:'def'},{x:140,y:155,team:'gk',label:'GK'}], arrows:[{id:'a1',x1:100,y1:125,x2:140,y2:82,color:'rgba(255,255,255,0.4)',w:1.5},{id:'a2',x1:140,y1:80,x2:185,y2:122,color:'rgba(245,197,24,0.7)',w:2,dash:true}]},
+  g11:{svg:'<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"> <rect width="280" height="180" fill="#0d4a1e"/> <rect x="14" y="14" width="252" height="152" fill="rgba(15,100,50,0.3)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" rx="2"/> <rect x="80" y="14" width="120" height="38" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/> <rect x="108" y="8" width="64" height="8" rx="1" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/> <rect x="14" y="14" width="252" height="78" fill="rgba(93,202,165,0.06)" stroke="none"/> <rect x="14" y="92" width="252" height="74" fill="rgba(75,45,140,0.1)" stroke="none"/> <line x1="14" y1="92" x2="266" y2="92" stroke="rgba(255,255,255,0.45)" stroke-width="2" stroke-dasharray="6,4"/> <text x="140" y="36" text-anchor="middle" fill="rgba(93,202,165,0.6)" font-size="7" font-family="sans-serif" font-weight="700">ATTACK ZONE</text> <text x="140" y="158" text-anchor="middle" fill="rgba(180,140,255,0.55)" font-size="7" font-family="sans-serif" font-weight="700">BUILD ZONE — ALL PLAYERS START HERE</text> <defs> <marker id="wg11" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(245,197,24,0.95)"/></marker> <marker id="rg11" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(240,100,80,0.85)"/></marker> <marker id="pg11" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(180,140,255,0.8)"/></marker> </defs> <circle cx="140" cy="19" r="5" fill="#F5C518" stroke="white" stroke-width="1.2"/> <text x="140" y="22.5" text-anchor="middle" fill="#1A0F35" font-size="5.5" font-family="sans-serif" font-weight="700">GK</text> <circle cx="140" cy="65" r="5" fill="#7B52C2" stroke="#B090FF" stroke-width="1" opacity="0.5"/> <text x="140" y="68" text-anchor="middle" fill="white" font-size="5" font-family="sans-serif">RUN</text> <circle cx="80" cy="112" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="120" cy="122" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="160" cy="118" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="200" cy="112" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="140" cy="138" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="90" cy="105" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="130" cy="108" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="165" cy="105" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="105" cy="128" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="175" cy="128" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <line x1="160" y1="112" x2="160" y2="78" stroke="rgba(245,197,24,0.9)" stroke-width="2.5" stroke-dasharray="5,3" marker-end="url(#wg11)"/> <line x1="155" y1="74" x2="143" y2="68" stroke="rgba(180,140,255,0.6)" stroke-width="1.5" stroke-dasharray="3,2" marker-end="url(#pg11)"/> <line x1="90" y1="99" x2="90" y2="76" stroke="rgba(240,100,80,0.7)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#rg11)"/> <line x1="130" y1="102" x2="118" y2="78" stroke="rgba(240,100,80,0.7)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#rg11)"/> <text x="172" y="80" fill="rgba(245,197,24,0.6)" font-size="6" font-family="sans-serif" font-weight="700">THROUGH</text> <text x="172" y="87" fill="rgba(245,197,24,0.6)" font-size="6" font-family="sans-serif" font-weight="700">BALL</text> <text x="140" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6.5" font-family="sans-serif">4 PASSES → PLAY THROUGH → DEFENDERS RECOVER → FINISH</text> </svg>'},
+  g12:{svg:'<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"> <rect width="280" height="180" fill="#0d4a1e"/> <rect x="14" y="14" width="252" height="152" fill="rgba(15,100,50,0.3)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" rx="2"/> <rect x="80" y="155" width="120" height="10" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/> <rect x="55" y="14" width="52" height="14" rx="2" fill="rgba(93,202,165,0.12)" stroke="rgba(93,202,165,0.55)" stroke-width="1.5"/> <text x="81" y="24" text-anchor="middle" fill="rgba(93,202,165,0.8)" font-size="6.5" font-family="sans-serif" font-weight="700">MINI</text> <rect x="173" y="14" width="52" height="14" rx="2" fill="rgba(93,202,165,0.12)" stroke="rgba(93,202,165,0.55)" stroke-width="1.5"/> <text x="199" y="24" text-anchor="middle" fill="rgba(93,202,165,0.8)" font-size="6.5" font-family="sans-serif" font-weight="700">MINI</text> <line x1="14" y1="95" x2="266" y2="95" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-dasharray="4,3"/> <defs> <marker id="wg12" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(255,255,255,0.6)"/></marker> <marker id="gg12" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(245,197,24,0.9)"/></marker> <marker id="rg12" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(240,100,80,0.85)"/></marker> </defs> <circle cx="140" cy="161" r="5" fill="#F5C518" stroke="white" stroke-width="1.2"/> <text x="140" y="164.5" text-anchor="middle" fill="#1A0F35" font-size="5.5" font-family="sans-serif" font-weight="700">GK</text> <circle cx="50" cy="120" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="50" y="123.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">LB</text> <circle cx="100" cy="115" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="100" y="118.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">CB</text> <circle cx="180" cy="115" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="180" y="118.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">CB</text> <circle cx="230" cy="120" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="230" y="123.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">RB</text> <circle cx="140" cy="130" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="140" y="133.5" text-anchor="middle" fill="white" font-size="6" font-family="sans-serif" font-weight="700">DM</text> <circle cx="90" cy="78" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="140" cy="68" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="190" cy="78" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <line x1="140" y1="156" x2="102" y2="121" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" marker-end="url(#wg12)"/> <line x1="95" y1="109" x2="80" y2="40" stroke="rgba(245,197,24,0.75)" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#gg12)"/> <line x1="90" y1="72" x2="90" y2="118" stroke="rgba(240,100,80,0.7)" stroke-width="1.5" stroke-dasharray="3,3" marker-end="url(#rg12)"/> <text x="140" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6.5" font-family="sans-serif">GK BUILDS OUT → 4 BACKS + DM PLAY THROUGH PRESS → REACH MINI-GOALS</text> </svg>'},
+
+  // ── GAME PHASES ──
+  p1:{svg:'<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"> <rect width="280" height="180" fill="#0d4a1e"/> <rect x="14" y="14" width="252" height="152" fill="rgba(15,100,50,0.3)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" rx="2"/> <rect x="80" y="155" width="120" height="10" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/> <rect x="55" y="14" width="52" height="14" rx="2" fill="rgba(93,202,165,0.12)" stroke="rgba(93,202,165,0.55)" stroke-width="1.5"/> <text x="81" y="24" text-anchor="middle" fill="rgba(93,202,165,0.8)" font-size="6.5" font-family="sans-serif" font-weight="700">MINI</text> <rect x="173" y="14" width="52" height="14" rx="2" fill="rgba(93,202,165,0.12)" stroke="rgba(93,202,165,0.55)" stroke-width="1.5"/> <text x="199" y="24" text-anchor="middle" fill="rgba(93,202,165,0.8)" font-size="6.5" font-family="sans-serif" font-weight="700">MINI</text> <line x1="14" y1="60" x2="266" y2="60" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-dasharray="5,4"/> <text x="268" y="63" fill="rgba(255,255,255,0.3)" font-size="5.5" font-family="sans-serif">MID</text> <defs> <marker id="wp1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(255,255,255,0.6)"/></marker> <marker id="gp1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(245,197,24,0.9)"/></marker> </defs> <circle cx="140" cy="161" r="5" fill="#F5C518" stroke="white" stroke-width="1.2"/> <text x="140" y="164.5" text-anchor="middle" fill="#1A0F35" font-size="5.5" font-family="sans-serif" font-weight="700">GK</text> <circle cx="60" cy="130" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="105" cy="120" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="175" cy="120" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="220" cy="130" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="105" cy="140" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="175" cy="140" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="60" cy="85" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="140" cy="80" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="220" cy="85" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="85" cy="48" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="140" cy="43" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <circle cx="195" cy="48" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <line x1="140" y1="156" x2="140" y2="128" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" marker-end="url(#wp1)"/> <line x1="140" y1="114" x2="140" y2="90" stroke="rgba(245,197,24,0.8)" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#gp1)"/> <text x="140" y="108" text-anchor="middle" fill="rgba(245,197,24,0.55)" font-size="6" font-family="sans-serif" font-weight="700">PRESS</text> <text x="50" y="108" fill="rgba(240,100,80,0.55)" font-size="5.5" font-family="sans-serif">RED</text> <text x="50" y="115" fill="rgba(240,100,80,0.55)" font-size="5.5" font-family="sans-serif">GOAL</text> <text x="50" y="122" fill="rgba(240,100,80,0.55)" font-size="5.5" font-family="sans-serif">SIDE</text> <text x="218" y="65" text-anchor="middle" fill="rgba(180,140,255,0.55)" font-size="5.5" font-family="sans-serif">PURPLE</text> <text x="218" y="72" text-anchor="middle" fill="rgba(180,140,255,0.55)" font-size="5.5" font-family="sans-serif">3-3</text> <text x="140" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6.5" font-family="sans-serif">GK BUILDS OUT → 3-3 PLAYS THROUGH RED PRESS → REACH MIDFIELD</text> </svg>'},
+  p2:{svg:'<svg viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg"> <rect width="280" height="180" fill="#0d4a1e"/> <rect x="14" y="14" width="252" height="152" fill="rgba(15,100,50,0.3)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" rx="2"/> <rect x="84" y="14" width="112" height="34" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/> <rect x="108" y="8" width="64" height="8" rx="1" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/> <rect x="14" y="14" width="58" height="152" fill="rgba(123,82,194,0.08)" stroke="rgba(123,82,194,0.3)" stroke-width="1" stroke-dasharray="3,3"/> <rect x="208" y="14" width="58" height="152" fill="rgba(123,82,194,0.08)" stroke="rgba(123,82,194,0.3)" stroke-width="1" stroke-dasharray="3,3"/> <text x="43" y="93" text-anchor="middle" fill="rgba(180,140,255,0.55)" font-size="7" font-family="sans-serif" font-weight="700" transform="rotate(-90,43,93)">HALF SPACE</text> <text x="237" y="93" text-anchor="middle" fill="rgba(180,140,255,0.55)" font-size="7" font-family="sans-serif" font-weight="700" transform="rotate(90,237,93)">HALF SPACE</text> <defs> <marker id="wp2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(245,197,24,0.9)"/></marker> </defs> <circle cx="140" cy="19" r="5" fill="#F5C518" stroke="white" stroke-width="1.2"/> <text x="140" y="22.5" text-anchor="middle" fill="#1A0F35" font-size="5.5" font-family="sans-serif" font-weight="700">GK</text> <circle cx="35" cy="50" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="35" y="53.5" text-anchor="middle" fill="white" font-size="5.5" font-family="sans-serif" font-weight="700">7</text> <circle cx="140" cy="42" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="140" y="45.5" text-anchor="middle" fill="white" font-size="5.5" font-family="sans-serif" font-weight="700">9</text> <circle cx="245" cy="50" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="245" y="53.5" text-anchor="middle" fill="white" font-size="5.5" font-family="sans-serif" font-weight="700">11</text> <circle cx="88" cy="78" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="88" y="81.5" text-anchor="middle" fill="white" font-size="5.5" font-family="sans-serif" font-weight="700">8</text> <circle cx="140" cy="72" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="140" y="75.5" text-anchor="middle" fill="white" font-size="5.5" font-family="sans-serif" font-weight="700">10</text> <circle cx="192" cy="78" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="192" y="81.5" text-anchor="middle" fill="white" font-size="5.5" font-family="sans-serif" font-weight="700">6</text> <circle cx="40" cy="112" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="40" y="115.5" text-anchor="middle" fill="white" font-size="5.5" font-family="sans-serif" font-weight="700">LB</text> <circle cx="100" cy="108" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="100" y="111.5" text-anchor="middle" fill="white" font-size="5.5" font-family="sans-serif" font-weight="700">CB</text> <circle cx="180" cy="108" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="180" y="111.5" text-anchor="middle" fill="white" font-size="5.5" font-family="sans-serif" font-weight="700">CB</text> <circle cx="240" cy="112" r="6" fill="#7B52C2" stroke="#B090FF" stroke-width="1.2"/> <text x="240" y="115.5" text-anchor="middle" fill="white" font-size="5.5" font-family="sans-serif" font-weight="700">RB</text> <circle cx="100" cy="52" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="140" cy="56" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="180" cy="52" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="75" cy="88" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="140" cy="92" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="205" cy="88" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <circle cx="140" cy="128" r="6" fill="#C83232" stroke="#FF6060" stroke-width="1.2"/> <line x1="88" y1="72" x2="52" y2="57" stroke="rgba(245,197,24,0.85)" stroke-width="2" marker-end="url(#wp2)"/> <text x="140" y="174" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="6.5" font-family="sans-serif">10 PURPLE (4-3-3) vs 7 RED BLOCK — ENTER HALF-SPACE TO SCORE</text> </svg>'},
+  p3:{type:'half', dots:[{x:55,y:100,team:'att',label:'7'},{x:100,y:125,team:'att',label:'LB'},{x:120,y:105,team:'att',label:'8'},{x:140,y:115,team:'att',label:'9'},{x:165,y:105,team:'att',label:'10'},{x:190,y:125,team:'att',label:'RB'},{x:225,y:100,team:'att',label:'11'},{x:115,y:85,team:'def'},{x:150,y:80,team:'def'},{x:180,y:85,team:'def'},{x:140,y:70,team:'def'},{x:140,y:155,team:'gk',label:'GK'}], arrows:[{id:'a1',x1:55,y1:100,x2:100,y2:127,color:'rgba(255,255,255,0.4)',w:1.5,dash:true},{id:'a2',x1:100,y1:125,x2:100,y2:60,color:'rgba(245,197,24,0.8)',w:2}]},
+  p4:{type:'half', dots:[{x:55,y:95,team:'att',label:'7'},{x:105,y:125,team:'att',label:'8'},{x:140,y:85,team:'att',label:'9'},{x:175,y:125,team:'att',label:'10'},{x:225,y:95,team:'att',label:'11'},{x:100,y:95,team:'def'},{x:140,y:100,team:'def'},{x:175,y:95,team:'def'},{x:130,y:110,team:'def'},{x:155,y:110,team:'def'},{x:140,y:115,team:'def'},{x:140,y:155,team:'gk',label:'GK'}], arrows:[{id:'a1',x1:105,y1:125,x2:140,y2:87,color:'rgba(245,197,24,0.7)',w:2},{id:'a2',x1:140,y1:85,x2:105,y2:123,color:'rgba(255,255,255,0.4)',w:1.5,dash:true}]},
+  p5:{type:'full', dots:[{x:80,y:50,team:'att',label:'7'},{x:140,y:40,team:'att',label:'9'},{x:200,y:50,team:'att',label:'11'},{x:110,y:70,team:'att',label:'8'},{x:170,y:70,team:'att',label:'10'},{x:60,y:115,team:'def',label:'LB'},{x:110,y:110,team:'def',label:'CB'},{x:170,y:110,team:'def',label:'CB'},{x:220,y:115,team:'def',label:'RB'},{x:140,y:100,team:'def',label:'DM'},{x:140,y:22,team:'gk',label:'GK'},{x:140,y:158,team:'gk',label:'GK'}], arrows:[{id:'a1',x1:80,y1:50,x2:110,y2:80,color:'#C83232',w:2.5}]},
+  p6:{type:'half', zones:[{x:14,y:90,w:252,h:70,fill:'rgba(180,40,40,0.06)',stroke:'rgba(180,40,40,0.2)',label:'LOW BLOCK'}], dots:[{x:55,y:100,team:'def',label:'LB'},{x:100,y:105,team:'def',label:'CB'},{x:180,y:105,team:'def',label:'CB'},{x:225,y:100,team:'def',label:'RB'},{x:140,y:90,team:'def',label:'DM'},{x:75,y:70,team:'att'},{x:140,y:60,team:'att'},{x:205,y:70,team:'att'},{x:110,y:80,team:'att'},{x:170,y:80,team:'att'},{x:140,y:155,team:'gk',label:'GK'}], labels:[{x:140,y:170,text:'COMPACT SHAPE — DENY THE #9',color:'rgba(255,255,255,0.35)',size:7}]},
+  p7:{type:'full', dots:[{x:60,y:120,team:'att',label:'7'},{x:140,y:130,team:'att',label:'9'},{x:220,y:120,team:'att',label:'11'},{x:100,y:110,team:'att',label:'8'},{x:170,y:110,team:'att',label:'10'},{x:100,y:65,team:'def'},{x:145,y:60,team:'def'},{x:185,y:65,team:'def'},{x:130,y:80,team:'def'},{x:160,y:80,team:'def'},{x:140,y:22,team:'gk',label:'GK'},{x:140,y:158,team:'gk',label:'GK'}], arrows:[{id:'a1',x1:140,y1:130,x2:140,y2:80,color:'rgba(245,197,24,0.8)',w:2.5},{id:'a2',x1:60,y1:120,x2:80,y2:60,color:'rgba(245,197,24,0.6)',w:2,dash:true}]},
+  p8:{type:'full', dots:[{x:60,y:55,team:'att',label:'7'},{x:140,y:45,team:'att',label:'9'},{x:220,y:55,team:'att',label:'11'},{x:100,y:70,team:'att',label:'8'},{x:170,y:70,team:'att',label:'10'},{x:60,y:120,team:'def',label:'LB'},{x:110,y:115,team:'def',label:'CB'},{x:170,y:115,team:'def',label:'CB'},{x:220,y:120,team:'def',label:'RB'},{x:140,y:105,team:'def',label:'DM'},{x:140,y:22,team:'gk',label:'GK'},{x:140,y:158,team:'gk',label:'GK'}], arrows:[{id:'a1',x1:60,y1:120,x2:80,y2:95,color:'#C83232',w:2,dash:true},{id:'a2',x1:140,y1:105,x2:140,y2:85,color:'#C83232',w:2,dash:true}]},
+  p9:{type:'half', dots:[{x:55,y:85,team:'att',label:'CK'},{x:120,y:55,team:'att',label:'R1'},{x:165,y:65,team:'att',label:'R2'},{x:100,y:105,team:'def'},{x:140,y:100,team:'def'},{x:180,y:100,team:'def'},{x:140,y:155,team:'gk',label:'GK'}], arrows:[{id:'a1',x1:55,y1:85,x2:120,y2:58,color:'rgba(245,197,24,0.8)',w:2},{id:'a2',x1:140,y1:115,x2:122,y2:58,color:'rgba(245,197,24,0.5)',w:1.5,dash:true},{id:'a3',x1:140,y1:115,x2:165,y2:68,color:'rgba(245,197,24,0.5)',w:1.5,dash:true}], labels:[{x:140,y:170,text:'NEAR POST + BACK POST RUNNERS',color:'rgba(255,255,255,0.35)',size:7}]},
+  p10:{type:'half', dots:[{x:55,y:85,team:'att',label:'CK'},{x:108,y:110,team:'def',label:'BK'},{x:140,y:105,team:'def',label:'DM'},{x:172,y:110,team:'def',label:'BK'},{x:108,y:148,team:'def',label:'P'},{x:172,y:148,team:'def',label:'P'},{x:140,y:155,team:'gk',label:'GK'},{x:120,y:65,team:'att',label:'R1'},{x:160,y:70,team:'att',label:'R2'}], arrows:[{id:'a1',x1:55,y1:85,x2:130,y2:60,color:'rgba(255,255,255,0.4)',w:1.5},{id:'a2',x1:108,y1:110,x2:115,y2:65,color:'#C83232',w:2.5}], labels:[{x:140,y:170,text:'ATTACK THE BALL — CLEAR LONG',color:'rgba(255,255,255,0.35)',size:7}]}
+};
+
+// Render a diagram for a given item type+id, size: 'card' or 'cv'
+function renderDiagram(type, id, size){
+  const key = type==='skill' ? id : id;
+  const spec = diagrams[key];
+  if(!spec) return '';
+  const cls = size==='cv' ? 'cv-pitch-wrap' : 'pitch-wrap';
+  return `<div class="${cls}">${makeDiagram(spec)}</div>`;
+}
+
+
+// ─── SESSION PERSISTENCE ─────────────────────────────────────────────────────
+const STORAGE_KEY = 'panthers_sessions';
+
+function getSavedSessions(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}'); }
+  catch(e){ return {}; }
+}
+
+function saveSession(){
+  const nameInp = document.getElementById('save-name-inp');
+  const name = nameInp.value.trim() ||
+    document.getElementById('sess-name').value.trim() ||
+    'Untitled Session';
+  if(!session.length){ showToast('Nothing to save — add drills first.'); return; }
+  const saves = getSavedSessions();
+  const key = Date.now().toString();
+  saves[key] = {
+    name,
+    date: document.getElementById('sess-date').value,
+    focus: document.getElementById('sess-focus').value,
+    savedAt: new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}),
+    items: session.map(i=>({type:i.type,id:i.id,minutes:i.minutes}))
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(saves));
+  nameInp.value = '';
+  renderSavedList();
+  showToast('Session saved: ' + name);
+}
+
+function loadSession(key){
+  const saves = getSavedSessions();
+  const save = saves[key];
+  if(!save) return;
+  session = save.items.map(i=>({type:i.type,id:i.id,minutes:i.minutes}));
+  if(save.date) document.getElementById('sess-date').value = save.date;
+  if(save.focus) document.getElementById('sess-focus').value = save.focus;
+  document.getElementById('sess-name').value = save.name;
+  updateBadge();
+  renderSession();
+  renderSavedList();
+  renderWarmup(); renderSkills(); renderGames(); renderPhases();
+  showToast('Loaded: ' + save.name);
+}
+
+function deleteSession(key){
+  const saves = getSavedSessions();
+  const name = saves[key]?.name || 'session';
+  delete saves[key];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(saves));
+  renderSavedList();
+  showToast('Deleted: ' + name);
+}
+
+function renderSavedList(){
+  const saves = getSavedSessions();
+  const list = document.getElementById('saved-list');
+  if(!list) return;
+  const keys = Object.keys(saves).sort((a,b)=>b-a); // newest first
+  if(!keys.length){
+    list.innerHTML = '<div class="no-saves">No saved sessions yet.</div>';
+    return;
+  }
+  list.innerHTML = keys.map(k=>{
+    const s = saves[k];
+    const itemCount = s.items?.length || 0;
+    const meta = [s.savedAt, s.date, itemCount + ' drill' + (itemCount!==1?'s':''), s.focus].filter(Boolean).join(' · ');
+    return `<div class="saved-item">
+      <div class="saved-item-info">
+        <div class="saved-item-name">${s.name}</div>
+        <div class="saved-item-meta">${meta}</div>
+      </div>
+      <div class="saved-item-btns">
+        <button class="si-btn load" onclick="loadSession('${k}')">Load</button>
+        <button class="si-btn del" onclick="deleteSession('${k}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showToast(msg){
+  const t = document.getElementById('save-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+renderWarmup();renderSkills();renderGames();renderPhases();
+</script>
+<div class="save-toast" id="save-toast"></div>
+</body>
+</html>
